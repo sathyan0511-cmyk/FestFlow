@@ -1,0 +1,23 @@
+{
+  "name": "festflow",
+  "version": "1.0.0",
+  "description": "FestFlow - Full-Stack College Event Management Web Application",
+  "scripts": {
+    "server": "npm run dev --prefix server",
+    "client": "npm run dev --prefix client",
+    "seed": "npm run seed --prefix server",
+    "test:server": "node server/tests/runServerTest.js"
+  },
+  "keywords": [
+    "festflow",
+    "college-events",
+    "mern",
+    "mongodb",
+    "express",
+    "react",
+    "vite",
+    "tailwind"
+  ],
+  "author": "FestFlow Team",
+  "license": "ISC"
+}
