@@ -39,6 +39,10 @@ const clubSchema = new mongoose.Schema(
       }
     ],
     facultyCoordinator: {
+      user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+      },
       name: { type: String, trim: true },
       email: { type: String, trim: true },
       phone: { type: String, trim: true },

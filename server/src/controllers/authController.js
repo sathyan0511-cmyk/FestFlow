@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const { getAuthorizedClubIds, getSupervisedClubIds } = require('../utils/clubAuthorization');
 
 // Helper to sign JWT
 const generateToken = (id) => {
@@ -64,6 +65,7 @@ const register = async (req, res, next) => {
     });
 
     const token = generateToken(user._id);
+    const authorizedClubs = await getAuthorizedClubIds(user);
 
     res.status(201).json({
       success: true,
@@ -76,7 +78,8 @@ const register = async (req, res, next) => {
         role: user.role,
         participantType: user.participantType,
         department: user.department,
-        registerNumber: user.registerNumber
+        registerNumber: user.registerNumber,
+        authorizedClubs
       }
     });
   } catch (error) {
@@ -124,6 +127,8 @@ const login = async (req, res, next) => {
     }
 
     const token = generateToken(user._id);
+    const authorizedClubs = await getAuthorizedClubIds(user);
+    const supervisedClubs = user.role === 'faculty' ? await getSupervisedClubIds(user) : [];
 
     res.status(200).json({
       success: true,
@@ -136,7 +141,9 @@ const login = async (req, res, next) => {
         role: user.role,
         participantType: user.participantType,
         department: user.department,
-        registerNumber: user.registerNumber
+        registerNumber: user.registerNumber,
+        authorizedClubs,
+        supervisedClubs
       }
     });
   } catch (error) {
@@ -150,9 +157,14 @@ const login = async (req, res, next) => {
 const getMe = async (req, res, next) => {
   try {
     const user = await User.findById(req.user.id);
+    const authorizedClubs = await getAuthorizedClubIds(user);
+    const supervisedClubs = user.role === 'faculty' ? await getSupervisedClubIds(user) : [];
+    const userObj = user.toObject();
+    userObj.authorizedClubs = authorizedClubs;
+    userObj.supervisedClubs = supervisedClubs;
     res.status(200).json({
       success: true,
-      user
+      user: userObj
     });
   } catch (error) {
     next(error);

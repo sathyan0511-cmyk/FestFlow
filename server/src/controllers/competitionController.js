@@ -9,6 +9,7 @@ const {
 } = require('../models/Competition');
 const Event = require('../models/Event');
 const User = require('../models/User');
+const { isAuthorizedForClub } = require('../utils/clubAuthorization');
 
 // --- 1. COMPETITION ---
 const createCompetition = async (req, res, next) => {
@@ -26,6 +27,14 @@ const createCompetition = async (req, res, next) => {
 
     const event = await Event.findById(eventId);
     if (!event) return res.status(404).json({ success: false, message: 'Event not found' });
+
+    const authorized = await isAuthorizedForClub(req.user, event.club);
+    if (!authorized) {
+      return res.status(403).json({
+        success: false,
+        message: 'Forbidden: You are not authorized to create competitions for this club.'
+      });
+    }
 
     const comp = await Competition.create({
       event: eventId,

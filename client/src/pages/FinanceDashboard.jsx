@@ -1,20 +1,44 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import api from '../api/client';
 import LoadingSpinner from '../components/LoadingSpinner';
 import StatCard from '../components/StatCard';
 import Modal from '../components/Modal';
-import { DollarSign, TrendingUp, TrendingDown, Wallet, PlusCircle, CheckCircle2, PieChart } from 'lucide-react';
+import Badge from '../components/Badge';
+import {
+  Wallet,
+  TrendingUp,
+  TrendingDown,
+  DollarSign,
+  PlusCircle,
+  FileSpreadsheet,
+  AlertCircle,
+  Calendar,
+  Tag,
+  ArrowUpRight,
+  ArrowDownRight,
+  RefreshCw,
+  PieChart
+} from 'lucide-react';
+
+const formatINR = (val) => {
+  const num = Number(val);
+  return isNaN(num) ? '0' : num.toLocaleString('en-IN');
+};
 
 export default function FinanceDashboard() {
   const [events, setEvents] = useState([]);
+  const [selectedClubFilter, setSelectedClubFilter] = useState('ALL');
   const [selectedEventId, setSelectedEventId] = useState('');
   const [financials, setFinancials] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [financeLoading, setFinanceLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   // Modals
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
   const [isRevenueModalOpen, setIsRevenueModalOpen] = useState(false);
   const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   // Forms
   const [expenseForm, setExpenseForm] = useState({
@@ -35,210 +59,427 @@ export default function FinanceDashboard() {
     budgetStatus: 'approved'
   });
 
-  const fetchEvents = async () => {
+  const availableClubs = React.useMemo(() => {
+    const clubMap = new Map();
+    events.forEach((ev) => {
+      if (ev.club && ev.club._id) {
+        clubMap.set(ev.club._id.toString(), ev.club);
+      }
+    });
+    return Array.from(clubMap.values());
+  }, [events]);
+
+  const filteredEvents = React.useMemo(() => {
+    if (selectedClubFilter === 'ALL') return events;
+    return events.filter((ev) => (ev.club?._id || ev.club)?.toString() === selectedClubFilter);
+  }, [events, selectedClubFilter]);
+
+  const loadFinancials = useCallback(async (eventId) => {
+    if (!eventId) return;
     try {
-      setLoading(true);
-      const res = await api.get('/events');
-      if (res.data.success && res.data.events.length > 0) {
-        setEvents(res.data.events);
-        setSelectedEventId(res.data.events[0]._id);
-        loadFinancials(res.data.events[0]._id);
+      setFinanceLoading(true);
+      const res = await api.get(`/finances/event/${eventId}`);
+      if (res.data && res.data.success) {
+        setFinancials(res.data);
+      } else {
+        setFinancials(null);
       }
     } catch (err) {
-      console.error(err);
+      console.error('Failed to load event financials:', err);
+      // Keep existing data or empty summary rather than crashing
+    } finally {
+      setFinanceLoading(false);
+    }
+  }, []);
+
+  const fetchEvents = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await api.get('/finances/events');
+      if (res.data && res.data.success && Array.isArray(res.data.events) && res.data.events.length > 0) {
+        setEvents(res.data.events);
+        const initialId = res.data.events[0]._id;
+        setSelectedEventId(initialId);
+        await loadFinancials(initialId);
+      } else {
+        setEvents([]);
+        setSelectedEventId('');
+        setFinancials(null);
+      }
+    } catch (err) {
+      console.error('Error fetching events:', err);
+      setError(err.response?.data?.message || 'Unable to load events or access finance records.');
     } finally {
       setLoading(false);
     }
-  };
-
-  const loadFinancials = async (eventId) => {
-    try {
-      const res = await api.get(`/finances/event/${eventId}`);
-      if (res.data.success) {
-        setFinancials(res.data);
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  }, [loadFinancials]);
 
   useEffect(() => {
     fetchEvents();
-  }, []);
+  }, [fetchEvents]);
 
-  const handleEventChange = (e) => {
+  const handleClubFilterChange = (e) => {
+    const clubId = e.target.value;
+    setSelectedClubFilter(clubId);
+    const matching = clubId === 'ALL' ? events : events.filter((ev) => (ev.club?._id || ev.club)?.toString() === clubId);
+    if (matching.length > 0) {
+      setSelectedEventId(matching[0]._id);
+      loadFinancials(matching[0]._id);
+    } else {
+      setSelectedEventId('');
+      setFinancials(null);
+    }
+  };
+
+  const handleEventChange = async (e) => {
     const id = e.target.value;
     setSelectedEventId(id);
-    loadFinancials(id);
+    await loadFinancials(id);
   };
 
   const handleAddExpense = async (e) => {
     e.preventDefault();
+    if (!selectedEventId) return;
     try {
+      setSubmitting(true);
       const res = await api.post('/finances/expense', {
         ...expenseForm,
         eventId: selectedEventId
       });
-      if (res.data.success) {
+      if (res.data && res.data.success) {
         setIsExpenseModalOpen(false);
         setExpenseForm({ amount: '', expenseCategory: 'equipment', description: '' });
-        loadFinancials(selectedEventId);
+        await loadFinancials(selectedEventId);
       }
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to record expense');
+    } finally {
+      setSubmitting(false);
     }
   };
 
   const handleAddRevenue = async (e) => {
     e.preventDefault();
+    if (!selectedEventId) return;
     try {
+      setSubmitting(true);
       const res = await api.post('/finances/revenue', {
         ...revenueForm,
         eventId: selectedEventId
       });
-      if (res.data.success) {
+      if (res.data && res.data.success) {
         setIsRevenueModalOpen(false);
         setRevenueForm({ amount: '', revenueType: 'sponsorship', description: '' });
-        loadFinancials(selectedEventId);
+        await loadFinancials(selectedEventId);
       }
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to record revenue');
+    } finally {
+      setSubmitting(false);
     }
   };
 
   const handleSetBudget = async (e) => {
     e.preventDefault();
+    if (!selectedEventId) return;
     try {
+      setSubmitting(true);
       const res = await api.post('/finances/budget', {
         ...budgetForm,
         eventId: selectedEventId
       });
-      if (res.data.success) {
+      if (res.data && res.data.success) {
         setIsBudgetModalOpen(false);
-        loadFinancials(selectedEventId);
+        await loadFinancials(selectedEventId);
       }
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to update budget');
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  if (loading) return <LoadingSpinner message="Calculating financial ledger & balance sheet..." />;
+  if (loading) {
+    return <LoadingSpinner message="Reconciling financial ledger & balance sheet..." />;
+  }
 
+  if (error) {
+    return (
+      <div className="bg-surface-primary border border-surface-border rounded-xl p-8 text-center max-w-xl mx-auto my-12">
+        <div className="w-12 h-12 rounded-full bg-rose-50 border border-rose-200 text-status-error flex items-center justify-center mx-auto mb-4">
+          <AlertCircle className="w-6 h-6" />
+        </div>
+        <h2 className="font-display font-bold text-xl text-ink-primary mb-2">Financial Records Inaccessible</h2>
+        <p className="text-sm text-ink-muted mb-6">{error}</p>
+        <button
+          onClick={fetchEvents}
+          className="btn-accent inline-flex items-center gap-2"
+        >
+          <RefreshCw className="w-4 h-4" /> Try Again
+        </button>
+      </div>
+    );
+  }
+
+  if (events.length === 0) {
+    return (
+      <div className="bg-surface-primary border border-surface-border rounded-xl p-12 text-center max-w-lg mx-auto my-12">
+        <div className="w-12 h-12 rounded-full bg-surface-secondary text-ink-muted flex items-center justify-center mx-auto mb-4">
+          <FileSpreadsheet className="w-6 h-6" />
+        </div>
+        <h2 className="font-display font-bold text-xl text-ink-primary mb-2">No Authorized Event Ledgers</h2>
+        <p className="text-sm text-ink-muted mb-6">
+          You do not currently manage any event finances. To access finance records, you must be designated as an organizer for a club and host events with budget specifications.
+        </p>
+      </div>
+    );
+  }
+
+  const selectedEvent = filteredEvents.find((ev) => ev._id === selectedEventId) || events.find((ev) => ev._id === selectedEventId) || events[0];
   const summary = financials?.summary || {
+    budget: null,
     totalRevenue: 0,
     totalExpenditure: 0,
-    profit: 0
+    profit: 0,
+    isProfitable: true
   };
 
+  const approvedBudget = summary.budget?.approvedAmount || 0;
+  const allocatedBudget = summary.budget?.allocatedAmount || 0;
+  const totalRevenue = summary.totalRevenue || 0;
+  const totalExpenditure = summary.totalExpenditure || 0;
+  const netProfit = summary.profit !== undefined ? summary.profit : (totalRevenue - totalExpenditure);
+  const isProfitable = netProfit >= 0;
+
+  // Calculate budget utilization percentage
+  const budgetUtilization = approvedBudget > 0 ? Math.min(100, Math.round((totalExpenditure / approvedBudget) * 100)) : 0;
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="space-y-8 animate-fadeIn">
+      {/* Editorial Header */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 border-b border-surface-border">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Event Budgets, Expenses & Revenue</h1>
-          <p className="text-xs text-slate-500 mt-1">
-            Real-time financial control compliant with 3NF (dynamic calculation of Total_Revenue, Total_Expenditure, and Profit)
+          <div className="flex items-center gap-2.5 mb-2">
+            <span className="font-mono text-xs uppercase tracking-widest text-brand-accent font-semibold">
+              Treasury & Accounts
+            </span>
+            <span className="text-surface-border">•</span>
+            <span className="inline-flex items-center text-xs font-mono text-ink-muted bg-surface-secondary px-2 py-0.5 rounded border border-surface-border">
+              3NF Compliant
+            </span>
+          </div>
+          <h1 className="font-display font-bold text-3xl sm:text-4xl text-ink-primary tracking-tight">
+            Event Finances
+          </h1>
+          <p className="text-sm text-ink-muted mt-1 max-w-2xl">
+            Real-time balance sheet, automated ledger reconciliations, and budget tracking for campus festivals.
           </p>
         </div>
 
-        {/* Event Selector */}
-        <div className="flex items-center gap-2">
-          <label className="text-xs font-semibold text-slate-500 whitespace-nowrap">Select Event:</label>
-          <select
-            value={selectedEventId}
-            onChange={handleEventChange}
-            className="px-3 py-1.5 text-xs font-semibold bg-white border border-slate-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        {/* Event Selector & Actions */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          {availableClubs.length > 1 && (
+            <div className="relative">
+              <label htmlFor="club-filter" className="sr-only">Filter by Club</label>
+              <select
+                id="club-filter"
+                value={selectedClubFilter}
+                onChange={handleClubFilterChange}
+                className="w-full sm:w-auto px-4 py-2.5 text-xs font-semibold bg-surface-primary border border-surface-border rounded-lg shadow-subtle focus:outline-none focus:border-brand-accent transition-colors pr-8 cursor-pointer"
+              >
+                <option value="ALL">All Authorized Clubs ({availableClubs.length})</option>
+                {availableClubs.map((c) => (
+                  <option key={c._id} value={c._id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <div className="relative">
+            <label htmlFor="event-select" className="sr-only">Select Event</label>
+            <select
+              id="event-select"
+              value={selectedEventId}
+              onChange={handleEventChange}
+              className="w-full sm:w-auto px-4 py-2.5 text-xs font-medium bg-surface-primary border border-surface-border rounded-lg shadow-subtle focus:outline-none focus:border-brand-accent transition-colors pr-8 cursor-pointer"
+            >
+              {filteredEvents.map((e) => (
+                <option key={e._id} value={e._id}>
+                  {e.title} {e.club?.name ? `(${e.club.name})` : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <button
+            onClick={() => loadFinancials(selectedEventId)}
+            title="Refresh Ledger"
+            disabled={financeLoading || !selectedEventId}
+            className="p-2.5 border border-surface-border rounded-lg bg-surface-primary hover:bg-surface-secondary text-ink-muted hover:text-ink-primary transition-colors disabled:opacity-50"
           >
-            {events.map((e) => (
-              <option key={e._id} value={e._id}>
-                {e.title}
-              </option>
-            ))}
-          </select>
+            <RefreshCw className={`w-4 h-4 ${financeLoading ? 'animate-spin text-brand-accent' : ''}`} />
+          </button>
         </div>
       </div>
+
+      {/* Selected Event Context Card */}
+      {selectedEvent && (
+        <div className="bg-surface-primary border border-surface-border rounded-xl p-5 shadow-subtle flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-mono uppercase tracking-wider text-ink-muted">Active Ledger:</span>
+              <span className="font-display font-bold text-lg text-ink-primary">{selectedEvent.title}</span>
+              <Badge variant="outline" size="sm">{selectedEvent.category || 'General'}</Badge>
+            </div>
+            <p className="text-xs text-ink-muted line-clamp-1">
+              {selectedEvent.description || 'Campus festival event ledger.'}
+            </p>
+          </div>
+
+          {/* Action Triggers */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              onClick={() => {
+                setBudgetForm({
+                  allocatedAmount: allocatedBudget || '',
+                  approvedAmount: approvedBudget || '',
+                  budgetStatus: summary.budget?.budgetStatus || 'approved'
+                });
+                setIsBudgetModalOpen(true);
+              }}
+              className="btn-secondary text-xs px-3.5 py-2 inline-flex items-center gap-1.5"
+            >
+              <Wallet className="w-3.5 h-3.5 text-brand-accent" />
+              <span>{summary.budget ? 'Update Budget' : 'Set Budget'}</span>
+            </button>
+            <button
+              onClick={() => setIsExpenseModalOpen(true)}
+              className="btn-secondary text-xs px-3.5 py-2 inline-flex items-center gap-1.5 hover:border-status-error/40"
+            >
+              <ArrowDownRight className="w-3.5 h-3.5 text-status-error" />
+              <span>Record Expense</span>
+            </button>
+            <button
+              onClick={() => setIsRevenueModalOpen(true)}
+              className="btn-secondary text-xs px-3.5 py-2 inline-flex items-center gap-1.5 hover:border-status-success/40"
+            >
+              <ArrowUpRight className="w-3.5 h-3.5 text-status-success" />
+              <span>Record Revenue</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Financial Metrics Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           title="Approved Budget"
-          value={`₹${(summary.budget?.approvedAmount || 0).toLocaleString()}`}
-          subtitle={`Allocated: ₹${(summary.budget?.allocatedAmount || 0).toLocaleString()} (${summary.budget?.budgetStatus || 'Not set'})`}
+          value={`₹${formatINR(approvedBudget)}`}
+          subtitle={
+            summary.budget
+              ? `Allocated: ₹${formatINR(allocatedBudget)} (${summary.budget.budgetStatus})`
+              : 'No formal budget set'
+          }
           icon={Wallet}
-          color="indigo"
         />
         <StatCard
-          title="Total Revenue (Calculated)"
-          value={`₹${summary.totalRevenue.toLocaleString()}`}
-          subtitle="Sponsorships + Registrations + Grants"
+          title="Total Revenue"
+          value={`₹${formatINR(totalRevenue)}`}
+          subtitle="Sponsorships + Grants + Fees"
           icon={TrendingUp}
-          color="emerald"
         />
         <StatCard
           title="Total Expenditure"
-          value={`₹${summary.totalExpenditure.toLocaleString()}`}
-          subtitle="Equipment + Catering + Prizes + Logistics"
+          value={`₹${formatINR(totalExpenditure)}`}
+          subtitle="Equipment, logistics, catering"
           icon={TrendingDown}
-          color="amber"
         />
         <StatCard
-          title="Net Profit / Surplus"
-          value={`₹${summary.profit.toLocaleString()}`}
-          subtitle={summary.isProfitable ? 'Surplus Balance' : 'Budget Deficit'}
+          title="Net Position"
+          value={`₹${formatINR(netProfit)}`}
+          subtitle={isProfitable ? 'Operational Surplus' : 'Operating Deficit'}
           icon={DollarSign}
-          color={summary.isProfitable ? 'emerald' : 'rose'}
         />
       </div>
 
-      {/* Action Buttons */}
-      <div className="flex items-center gap-3 flex-wrap">
-        <button
-          onClick={() => setIsBudgetModalOpen(true)}
-          className="px-3.5 py-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 text-xs font-bold rounded-xl transition-colors flex items-center gap-1.5"
-        >
-          <Wallet className="w-3.5 h-3.5" /> Set Budget
-        </button>
-        <button
-          onClick={() => setIsExpenseModalOpen(true)}
-          className="px-3.5 py-2 bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 text-xs font-bold rounded-xl transition-colors flex items-center gap-1.5"
-        >
-          <PlusCircle className="w-3.5 h-3.5" /> Record Expense
-        </button>
-        <button
-          onClick={() => setIsRevenueModalOpen(true)}
-          className="px-3.5 py-2 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 text-xs font-bold rounded-xl transition-colors flex items-center gap-1.5"
-        >
-          <PlusCircle className="w-3.5 h-3.5" /> Record Revenue
-        </button>
-      </div>
+      {/* Budget Utilization Indicator */}
+      {approvedBudget > 0 && (
+        <div className="bg-surface-primary border border-surface-border rounded-xl p-5 shadow-subtle">
+          <div className="flex items-center justify-between text-xs mb-2">
+            <span className="font-semibold text-ink-primary">Budget Utilization</span>
+            <span className="font-mono text-ink-muted">
+              ₹{formatINR(totalExpenditure)} spent of ₹{formatINR(approvedBudget)} ({budgetUtilization}%)
+            </span>
+          </div>
+          <div className="w-full h-2 bg-surface-secondary rounded-full overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all duration-500 ${
+                budgetUtilization > 95
+                  ? 'bg-status-error'
+                  : budgetUtilization > 75
+                  ? 'bg-status-warning'
+                  : 'bg-brand-accent'
+              }`}
+              style={{ width: `${budgetUtilization}%` }}
+            />
+          </div>
+        </div>
+      )}
 
-      {/* Ledger Tables */}
+      {/* Two-Column Ledger Tables */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Expenses Table */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm">
-          <h3 className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
-            <TrendingDown className="w-4 h-4 text-rose-600" />
-            Expenses Ledger ({financials?.expenses?.length || 0})
-          </h3>
+        {/* Expenses Ledger */}
+        <div className="bg-surface-primary rounded-xl border border-surface-border p-5 shadow-subtle">
+          <div className="flex items-center justify-between mb-4 pb-3 border-b border-surface-border">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-rose-50 text-status-error flex items-center justify-center">
+                <TrendingDown className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="font-display font-bold text-base text-ink-primary">Expenditure Ledger</h3>
+                <p className="text-2xs text-ink-muted">
+                  {financials?.expenses?.length || 0} debit entries
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setIsExpenseModalOpen(true)}
+              className="text-xs font-semibold text-brand-accent hover:text-brand-accent-hover inline-flex items-center gap-1"
+            >
+              <PlusCircle className="w-3.5 h-3.5" /> Add
+            </button>
+          </div>
 
           {!financials || !financials.expenses || financials.expenses.length === 0 ? (
-            <p className="text-xs text-slate-400 py-4 text-center">No expenses recorded for this event.</p>
+            <div className="py-8 text-center text-xs text-ink-muted border border-dashed border-surface-border rounded-lg">
+              No expenditure entries logged for this event.
+            </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-xs text-left text-slate-700">
-                <thead className="bg-slate-50 text-slate-500 font-semibold border-b">
+              <table className="w-full text-xs text-left">
+                <thead className="bg-surface-secondary text-ink-muted uppercase font-mono text-2xs border-b border-surface-border">
                   <tr>
-                    <th className="py-2 px-3">Description</th>
-                    <th className="py-2 px-3">Category</th>
-                    <th className="py-2 px-3 text-right">Amount</th>
+                    <th className="py-2.5 px-3">Description</th>
+                    <th className="py-2.5 px-3">Category</th>
+                    <th className="py-2.5 px-3 text-right">Debit (₹)</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-surface-border">
                   {financials.expenses.map((exp) => (
-                    <tr key={exp._id}>
-                      <td className="py-2 px-3 font-medium text-slate-900">{exp.description || 'Expense'}</td>
-                      <td className="py-2 px-3 capitalize">{exp.expenseCategory}</td>
-                      <td className="py-2 px-3 text-right font-bold text-rose-600">
-                        ₹{exp.amount.toLocaleString()}
+                    <tr key={exp._id} className="hover:bg-surface-secondary/50 transition-colors">
+                      <td className="py-2.5 px-3 font-medium text-ink-primary">
+                        {exp.description || 'Operational Expense'}
+                      </td>
+                      <td className="py-2.5 px-3">
+                        <span className="capitalize font-mono text-2xs bg-surface-secondary px-2 py-0.5 rounded border border-surface-border">
+                          {exp.expenseCategory || 'General'}
+                        </span>
+                      </td>
+                      <td className="py-2.5 px-3 text-right font-mono font-bold text-status-error">
+                        -₹{formatINR(exp.amount)}
                       </td>
                     </tr>
                   ))}
@@ -248,32 +489,55 @@ export default function FinanceDashboard() {
           )}
         </div>
 
-        {/* Revenues Table */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm">
-          <h3 className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-emerald-600" />
-            Revenues Ledger ({financials?.revenues?.length || 0})
-          </h3>
+        {/* Revenues Ledger */}
+        <div className="bg-surface-primary rounded-xl border border-surface-border p-5 shadow-subtle">
+          <div className="flex items-center justify-between mb-4 pb-3 border-b border-surface-border">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-emerald-50 text-status-success flex items-center justify-center">
+                <TrendingUp className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="font-display font-bold text-base text-ink-primary">Revenue Ledger</h3>
+                <p className="text-2xs text-ink-muted">
+                  {financials?.revenues?.length || 0} credit entries
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setIsRevenueModalOpen(true)}
+              className="text-xs font-semibold text-brand-accent hover:text-brand-accent-hover inline-flex items-center gap-1"
+            >
+              <PlusCircle className="w-3.5 h-3.5" /> Add
+            </button>
+          </div>
 
           {!financials || !financials.revenues || financials.revenues.length === 0 ? (
-            <p className="text-xs text-slate-400 py-4 text-center">No revenues recorded for this event.</p>
+            <div className="py-8 text-center text-xs text-ink-muted border border-dashed border-surface-border rounded-lg">
+              No revenue inflow entries logged for this event.
+            </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-xs text-left text-slate-700">
-                <thead className="bg-slate-50 text-slate-500 font-semibold border-b">
+              <table className="w-full text-xs text-left">
+                <thead className="bg-surface-secondary text-ink-muted uppercase font-mono text-2xs border-b border-surface-border">
                   <tr>
-                    <th className="py-2 px-3">Description</th>
-                    <th className="py-2 px-3">Source Type</th>
-                    <th className="py-2 px-3 text-right">Amount</th>
+                    <th className="py-2.5 px-3">Source / Details</th>
+                    <th className="py-2.5 px-3">Inflow Type</th>
+                    <th className="py-2.5 px-3 text-right">Credit (₹)</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-surface-border">
                   {financials.revenues.map((rev) => (
-                    <tr key={rev._id}>
-                      <td className="py-2 px-3 font-medium text-slate-900">{rev.description || 'Revenue'}</td>
-                      <td className="py-2 px-3 capitalize">{rev.revenueType.replace('_', ' ')}</td>
-                      <td className="py-2 px-3 text-right font-bold text-emerald-600">
-                        ₹{rev.amount.toLocaleString()}
+                    <tr key={rev._id} className="hover:bg-surface-secondary/50 transition-colors">
+                      <td className="py-2.5 px-3 font-medium text-ink-primary">
+                        {rev.description || 'Event Revenue'}
+                      </td>
+                      <td className="py-2.5 px-3">
+                        <span className="capitalize font-mono text-2xs bg-surface-secondary px-2 py-0.5 rounded border border-surface-border">
+                          {(rev.revenueType || 'Other').replace('_', ' ')}
+                        </span>
+                      </td>
+                      <td className="py-2.5 px-3 text-right font-mono font-bold text-status-success">
+                        +₹{formatINR(rev.amount)}
                       </td>
                     </tr>
                   ))}
@@ -285,26 +549,35 @@ export default function FinanceDashboard() {
       </div>
 
       {/* Record Expense Modal */}
-      <Modal isOpen={isExpenseModalOpen} onClose={() => setIsExpenseModalOpen(false)} title="Record Event Expense">
+      <Modal
+        isOpen={isExpenseModalOpen}
+        onClose={() => setIsExpenseModalOpen(false)}
+        title="Record Event Expenditure"
+      >
         <form onSubmit={handleAddExpense} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Expense Amount (₹) *</label>
+            <label className="block text-xs font-semibold text-ink-secondary mb-1">
+              Amount (₹) *
+            </label>
             <input
               type="number"
               required
-              min={1}
+              min="1"
               value={expenseForm.amount}
               onChange={(e) => setExpenseForm({ ...expenseForm, amount: e.target.value })}
-              className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl"
+              placeholder="e.g. 15000"
+              className="input-field text-sm"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Category *</label>
+            <label className="block text-xs font-semibold text-ink-secondary mb-1">
+              Expense Category *
+            </label>
             <select
               value={expenseForm.expenseCategory}
               onChange={(e) => setExpenseForm({ ...expenseForm, expenseCategory: e.target.value })}
-              className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl"
+              className="input-field text-sm"
             >
               <option value="equipment">Equipment & Sound</option>
               <option value="catering">Catering & Refreshments</option>
@@ -316,114 +589,175 @@ export default function FinanceDashboard() {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Description</label>
+            <label className="block text-xs font-semibold text-ink-secondary mb-1">
+              Description / Voucher Notes
+            </label>
             <input
               type="text"
               value={expenseForm.description}
               onChange={(e) => setExpenseForm({ ...expenseForm, description: e.target.value })}
-              placeholder="e.g. Stage lights and projector rental"
-              className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl"
+              placeholder="e.g. Stage lights and sound console vendor rental"
+              className="input-field text-sm"
             />
           </div>
 
-          <div className="pt-3 flex justify-end gap-2">
-            <button type="button" onClick={() => setIsExpenseModalOpen(false)} className="px-4 py-2 text-xs font-semibold text-slate-600">Cancel</button>
-            <button type="submit" className="px-5 py-2 bg-rose-600 text-white text-xs font-bold rounded-xl">Save Expense</button>
+          <div className="pt-4 flex justify-end gap-3 border-t border-surface-border">
+            <button
+              type="button"
+              onClick={() => setIsExpenseModalOpen(false)}
+              className="btn-secondary text-xs px-4 py-2"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="btn-accent text-xs px-5 py-2 disabled:opacity-50"
+            >
+              {submitting ? 'Recording...' : 'Save Expense Entry'}
+            </button>
           </div>
         </form>
       </Modal>
 
       {/* Record Revenue Modal */}
-      <Modal isOpen={isRevenueModalOpen} onClose={() => setIsRevenueModalOpen(false)} title="Record Event Revenue">
+      <Modal
+        isOpen={isRevenueModalOpen}
+        onClose={() => setIsRevenueModalOpen(false)}
+        title="Record Event Revenue"
+      >
         <form onSubmit={handleAddRevenue} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Revenue Amount (₹) *</label>
+            <label className="block text-xs font-semibold text-ink-secondary mb-1">
+              Revenue Amount (₹) *
+            </label>
             <input
               type="number"
               required
-              min={1}
+              min="1"
               value={revenueForm.amount}
               onChange={(e) => setRevenueForm({ ...revenueForm, amount: e.target.value })}
-              className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl"
+              placeholder="e.g. 50000"
+              className="input-field text-sm"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Revenue Source *</label>
+            <label className="block text-xs font-semibold text-ink-secondary mb-1">
+              Revenue Source *
+            </label>
             <select
               value={revenueForm.revenueType}
               onChange={(e) => setRevenueForm({ ...revenueForm, revenueType: e.target.value })}
-              className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl"
+              className="input-field text-sm"
             >
-              <option value="sponsorship">Sponsorship</option>
-              <option value="registration_fees">Registration Fees</option>
+              <option value="sponsorship">Corporate Sponsorship</option>
+              <option value="registration_fees">Delegate / Registration Fees</option>
               <option value="merchandise">Merchandise Sales</option>
-              <option value="grant">College / University Grant</option>
+              <option value="grant">University / College Grant</option>
               <option value="other">Other Inflow</option>
             </select>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Description</label>
+            <label className="block text-xs font-semibold text-ink-secondary mb-1">
+              Description / Reference
+            </label>
             <input
               type="text"
               value={revenueForm.description}
               onChange={(e) => setRevenueForm({ ...revenueForm, description: e.target.value })}
-              placeholder="e.g. Associate sponsor grant"
-              className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl"
+              placeholder="e.g. Title sponsor contract installment"
+              className="input-field text-sm"
             />
           </div>
 
-          <div className="pt-3 flex justify-end gap-2">
-            <button type="button" onClick={() => setIsRevenueModalOpen(false)} className="px-4 py-2 text-xs font-semibold text-slate-600">Cancel</button>
-            <button type="submit" className="px-5 py-2 bg-emerald-600 text-white text-xs font-bold rounded-xl">Save Revenue</button>
+          <div className="pt-4 flex justify-end gap-3 border-t border-surface-border">
+            <button
+              type="button"
+              onClick={() => setIsRevenueModalOpen(false)}
+              className="btn-secondary text-xs px-4 py-2"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="btn-accent text-xs px-5 py-2 disabled:opacity-50"
+            >
+              {submitting ? 'Recording...' : 'Save Revenue Entry'}
+            </button>
           </div>
         </form>
       </Modal>
 
       {/* Set Budget Modal */}
-      <Modal isOpen={isBudgetModalOpen} onClose={() => setIsBudgetModalOpen(false)} title="Configure Event Budget">
+      <Modal
+        isOpen={isBudgetModalOpen}
+        onClose={() => setIsBudgetModalOpen(false)}
+        title="Configure Event Budget"
+      >
         <form onSubmit={handleSetBudget} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Allocated Budget (₹) *</label>
+            <label className="block text-xs font-semibold text-ink-secondary mb-1">
+              Allocated Budget (₹) *
+            </label>
             <input
               type="number"
               required
-              min={1}
+              min="1"
               value={budgetForm.allocatedAmount}
               onChange={(e) => setBudgetForm({ ...budgetForm, allocatedAmount: e.target.value })}
-              className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl"
+              placeholder="e.g. 75000"
+              className="input-field text-sm"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Approved Budget (₹) *</label>
+            <label className="block text-xs font-semibold text-ink-secondary mb-1">
+              Approved Budget Ceiling (₹) *
+            </label>
             <input
               type="number"
               required
-              min={1}
+              min="1"
               value={budgetForm.approvedAmount}
               onChange={(e) => setBudgetForm({ ...budgetForm, approvedAmount: e.target.value })}
-              className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl"
+              placeholder="e.g. 100000"
+              className="input-field text-sm"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Status</label>
+            <label className="block text-xs font-semibold text-ink-secondary mb-1">
+              Approval Status
+            </label>
             <select
               value={budgetForm.budgetStatus}
               onChange={(e) => setBudgetForm({ ...budgetForm, budgetStatus: e.target.value })}
-              className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl"
+              className="input-field text-sm"
             >
-              <option value="approved">Approved</option>
+              <option value="approved">Approved by Dean / Committee</option>
               <option value="pending">Pending Review</option>
-              <option value="draft">Draft</option>
+              <option value="draft">Draft Estimate</option>
             </select>
           </div>
 
-          <div className="pt-3 flex justify-end gap-2">
-            <button type="button" onClick={() => setIsBudgetModalOpen(false)} className="px-4 py-2 text-xs font-semibold text-slate-600">Cancel</button>
-            <button type="submit" className="px-5 py-2 bg-indigo-600 text-white text-xs font-bold rounded-xl">Update Budget</button>
+          <div className="pt-4 flex justify-end gap-3 border-t border-surface-border">
+            <button
+              type="button"
+              onClick={() => setIsBudgetModalOpen(false)}
+              className="btn-secondary text-xs px-4 py-2"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="btn-accent text-xs px-5 py-2 disabled:opacity-50"
+            >
+              {submitting ? 'Saving...' : 'Confirm Budget'}
+            </button>
           </div>
         </form>
       </Modal>

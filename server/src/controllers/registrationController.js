@@ -1,5 +1,6 @@
 const Registration = require('../models/Registration');
 const Event = require('../models/Event');
+const { isAuthorizedForClub } = require('../utils/clubAuthorization');
 
 // @desc    Register logged-in student for an event
 // @route   POST /api/registrations
@@ -193,14 +194,12 @@ const getEventRegistrations = async (req, res, next) => {
       });
     }
 
-    // Permission check
-    const isOrganizer = event.organizers.some(
-      (org) => org.toString() === req.user.id.toString()
-    );
-    if (req.user.role !== 'admin' && !isOrganizer) {
+    // Permission check: Admin or organizer of the owning club
+    const authorized = await isAuthorizedForClub(req.user, event.club);
+    if (!authorized) {
       return res.status(403).json({
         success: false,
-        message: 'Not authorized to view attendee registrations for this event.'
+        message: 'Forbidden: Not authorized to view attendee registrations for this club.'
       });
     }
 

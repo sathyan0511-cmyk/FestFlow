@@ -1,8 +1,10 @@
+const mongoose = require('mongoose');
 const Event = require('../models/Event');
 const Club = require('../models/Club');
 const Venue = require('../models/Venue');
 const Registration = require('../models/Registration');
 const User = require('../models/User');
+const { getAuthorizedClubIds, getSupervisedClubIds } = require('../utils/clubAuthorization');
 
 // @desc    Get dashboard metrics & summary
 // @route   GET /api/dashboard/stats
@@ -60,17 +62,36 @@ const getDashboardStats = async (req, res, next) => {
         myUpcoming
       };
     } else if (userRole === 'organizer') {
-      const myManagedClubs = await Club.find({ organizers: userId }).select('_id');
-      const clubIds = myManagedClubs.map((c) => c._id);
+      const clubIds = await getAuthorizedClubIds(req.user);
 
-      const [myEventsCount, myClubsCount] = await Promise.all([
+      const [myEventsCount, myClubsCount, myActiveRegistrations] = await Promise.all([
         Event.countDocuments({ club: { $in: clubIds } }),
-        myManagedClubs.length
+        clubIds.length,
+        Registration.countDocuments({ user: userId, registrationStatus: 'registered' })
       ]);
 
       userStats = {
         myEventsCount,
-        myClubsCount
+        myClubsCount,
+        myActiveRegistrations
+      };
+    } else if (userRole === 'faculty') {
+      const clubIds = await getSupervisedClubIds(req.user);
+      const [myEventsCount, myClubsCount, myOrganizersCount] = await Promise.all([
+        Event.countDocuments({ club: { $in: clubIds } }),
+        clubIds.length,
+        Club.aggregate([
+          { $match: { _id: { $in: clubIds.map((id) => new mongoose.Types.ObjectId(id)) } } },
+          { $unwind: '$organizers' },
+          { $group: { _id: '$organizers' } },
+          { $count: 'count' }
+        ]).then((res) => (res[0] ? res[0].count : 0))
+      ]);
+
+      userStats = {
+        myEventsCount,
+        myClubsCount,
+        myOrganizersCount
       };
     }
 

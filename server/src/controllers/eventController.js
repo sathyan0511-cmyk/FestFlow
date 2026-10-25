@@ -2,6 +2,7 @@ const Event = require('../models/Event');
 const Venue = require('../models/Venue');
 const Club = require('../models/Club');
 const Registration = require('../models/Registration');
+const { isAuthorizedForClub, getAuthorizedClubIds } = require('../utils/clubAuthorization');
 
 // @desc    Get all events with search, filtering, and live registration counts
 // @route   GET /api/events
@@ -148,6 +149,15 @@ const createEvent = async (req, res, next) => {
       });
     }
 
+    // Verify organizer or admin authorization for this specific club
+    const authorized = await isAuthorizedForClub(req.user, clubDoc._id);
+    if (!authorized) {
+      return res.status(403).json({
+        success: false,
+        message: 'Forbidden: You are not authorized to create events for this club.'
+      });
+    }
+
     // Validate venue exists and capacity
     const venueDoc = await Venue.findById(venue);
     if (!venueDoc) {
@@ -231,17 +241,31 @@ const updateEvent = async (req, res, next) => {
       });
     }
 
-    // Check permission: Admin or creator or assigned organizer
-    const isCreator = event.createdBy.toString() === req.user.id.toString();
-    const isOrganizer = event.organizers.some(
-      (org) => org.toString() === req.user.id.toString()
-    );
-
-    if (req.user.role !== 'admin' && !isCreator && !isOrganizer) {
+    // Check permission: Admin or organizer of the owning club
+    const authorizedSource = await isAuthorizedForClub(req.user, event.club);
+    if (!authorizedSource) {
       return res.status(403).json({
         success: false,
-        message: 'You are not authorized to edit this event.'
+        message: 'Forbidden: You are not authorized to edit events for this club.'
       });
+    }
+
+    // If transferring event to another club, verify authorization for destination club
+    if (req.body.club && req.body.club.toString() !== event.club.toString()) {
+      const targetClubDoc = await Club.findById(req.body.club);
+      if (!targetClubDoc) {
+        return res.status(400).json({
+          success: false,
+          message: 'Target transfer club does not exist.'
+        });
+      }
+      const authorizedTarget = await isAuthorizedForClub(req.user, targetClubDoc._id);
+      if (!authorizedTarget) {
+        return res.status(403).json({
+          success: false,
+          message: 'Forbidden: You are not authorized to transfer events to the target club.'
+        });
+      }
     }
 
     // If venue is updated, check capacity
@@ -288,11 +312,12 @@ const deleteEvent = async (req, res, next) => {
       });
     }
 
-    const isCreator = event.createdBy.toString() === req.user.id.toString();
-    if (req.user.role !== 'admin' && !isCreator) {
+    // Check permission: Admin or organizer of the owning club
+    const authorized = await isAuthorizedForClub(req.user, event.club);
+    if (!authorized) {
       return res.status(403).json({
         success: false,
-        message: 'You are not authorized to delete this event.'
+        message: 'Forbidden: You are not authorized to delete events for this club.'
       });
     }
 

@@ -16,6 +16,9 @@ import Sponsors from './pages/Sponsors';
 import CateringManager from './pages/CateringManager';
 import Certificates from './pages/Certificates';
 import Volunteering from './pages/Volunteering';
+import ClubManage from './pages/ClubManage';
+import FacultyOrganizers from './pages/FacultyOrganizers';
+import AdminFaculty from './pages/AdminFaculty';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import NotFound from './pages/NotFound';
@@ -140,9 +143,33 @@ export default function App() {
             }
           />
           <Route
+            path="/manage/club/:id"
+            element={
+              <ProtectedRoute allowedRoles={['admin', 'organizer', 'faculty', 'student']}>
+                <ClubManage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/faculty/organizers"
+            element={
+              <ProtectedRoute allowedRoles={['admin', 'faculty']}>
+                <FacultyOrganizers />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/faculty"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminFaculty />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/finances"
             element={
-              <ProtectedRoute allowedRoles={['admin', 'organizer']}>
+              <ProtectedRoute allowedRoles={['admin', 'organizer', 'faculty']}>
                 <FinanceDashboard />
               </ProtectedRoute>
             }
@@ -150,7 +177,7 @@ export default function App() {
           <Route
             path="/my-registrations"
             element={
-              <ProtectedRoute allowedRoles={['student', 'admin']}>
+              <ProtectedRoute allowedRoles={['student', 'organizer', 'faculty', 'admin']}>
                 <MyRegistrations />
               </ProtectedRoute>
             }

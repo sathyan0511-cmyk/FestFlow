@@ -1,6 +1,7 @@
 const { Sponsor, EventSponsor } = require('../models/Sponsor');
 const { Revenue } = require('../models/Finance');
 const Event = require('../models/Event');
+const { isAuthorizedForClub } = require('../utils/clubAuthorization');
 
 // @desc    Register a new sponsor organization
 // @route   POST /api/sponsors
@@ -53,6 +54,14 @@ const linkEventSponsor = async (req, res, next) => {
 
     const event = await Event.findById(eventId);
     if (!event) return res.status(404).json({ success: false, message: 'Event not found' });
+
+    const authorized = await isAuthorizedForClub(req.user, event.club);
+    if (!authorized) {
+      return res.status(403).json({
+        success: false,
+        message: 'Forbidden: You are not authorized to link sponsors to this club.'
+      });
+    }
 
     const sponsor = await Sponsor.findById(sponsorId);
     if (!sponsor) return res.status(404).json({ success: false, message: 'Sponsor not found' });

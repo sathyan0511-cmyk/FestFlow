@@ -1,12 +1,56 @@
 const { Budget, Expense, Revenue } = require('../models/Finance');
 const Event = require('../models/Event');
+const { isAuthorizedForClub, getAuthorizedClubIds } = require('../utils/clubAuthorization');
+
+// @desc    Get events whose finances the user is authorized to manage
+// @route   GET /api/finances/events
+// @access  Private (Admin, Organizer)
+const getAuthorizedFinanceEvents = async (req, res, next) => {
+  try {
+    let query = {};
+    if (req.user.role !== 'admin') {
+      const authorizedClubIds = await getAuthorizedClubIds(req.user);
+      query.club = { $in: authorizedClubIds };
+    }
+
+    const events = await Event.find(query)
+      .populate('club', 'name category')
+      .populate('venue', 'name location capacity')
+      .sort({ startDate: -1 });
+
+    res.status(200).json({
+      success: true,
+      count: events.length,
+      events
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 // @desc    Get complete financial summary for an event (Calculates Total_Revenue, Total_Expenditure & Profit dynamically)
 // @route   GET /api/finances/event/:eventId
-// @access  Private (Admin, Organizer)
+// @access  Private (Admin, Organizer of the owning club)
 const getEventFinancials = async (req, res, next) => {
   try {
     const { eventId } = req.params;
+
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return res.status(404).json({
+        success: false,
+        message: 'Event not found.'
+      });
+    }
+
+    // Enforce club-level authorization
+    const authorized = await isAuthorizedForClub(req.user, event.club);
+    if (!authorized) {
+      return res.status(403).json({
+        success: false,
+        message: 'Forbidden: You are not authorized to view financial records for this club.'
+      });
+    }
 
     const [budget, expenses, revenues] = await Promise.all([
       Budget.findOne({ event: eventId }),
@@ -38,10 +82,27 @@ const getEventFinancials = async (req, res, next) => {
 
 // @desc    Create or update event budget
 // @route   POST /api/finances/budget
-// @access  Private (Admin, Organizer)
+// @access  Private (Admin, Organizer of the owning club)
 const setEventBudget = async (req, res, next) => {
   try {
     const { eventId, allocatedAmount, approvedAmount, budgetStatus } = req.body;
+
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return res.status(404).json({
+        success: false,
+        message: 'Event not found.'
+      });
+    }
+
+    // Enforce club-level authorization
+    const authorized = await isAuthorizedForClub(req.user, event.club);
+    if (!authorized) {
+      return res.status(403).json({
+        success: false,
+        message: 'Forbidden: You are not authorized to configure budgets for this club.'
+      });
+    }
 
     const budget = await Budget.findOneAndUpdate(
       { event: eventId },
@@ -66,10 +127,27 @@ const setEventBudget = async (req, res, next) => {
 
 // @desc    Add an expense record
 // @route   POST /api/finances/expense
-// @access  Private (Admin, Organizer)
+// @access  Private (Admin, Organizer of the owning club)
 const addExpense = async (req, res, next) => {
   try {
     const { eventId, amount, expenseCategory, description } = req.body;
+
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return res.status(404).json({
+        success: false,
+        message: 'Event not found.'
+      });
+    }
+
+    // Enforce club-level authorization
+    const authorized = await isAuthorizedForClub(req.user, event.club);
+    if (!authorized) {
+      return res.status(403).json({
+        success: false,
+        message: 'Forbidden: You are not authorized to record expenses for this club.'
+      });
+    }
 
     const expense = await Expense.create({
       event: eventId,
@@ -90,10 +168,27 @@ const addExpense = async (req, res, next) => {
 
 // @desc    Add a revenue record
 // @route   POST /api/finances/revenue
-// @access  Private (Admin, Organizer)
+// @access  Private (Admin, Organizer of the owning club)
 const addRevenue = async (req, res, next) => {
   try {
     const { eventId, revenueType, amount, description } = req.body;
+
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return res.status(404).json({
+        success: false,
+        message: 'Event not found.'
+      });
+    }
+
+    // Enforce club-level authorization
+    const authorized = await isAuthorizedForClub(req.user, event.club);
+    if (!authorized) {
+      return res.status(403).json({
+        success: false,
+        message: 'Forbidden: You are not authorized to record revenues for this club.'
+      });
+    }
 
     const revenue = await Revenue.create({
       event: eventId,
@@ -113,6 +208,7 @@ const addRevenue = async (req, res, next) => {
 };
 
 module.exports = {
+  getAuthorizedFinanceEvents,
   getEventFinancials,
   setEventBudget,
   addExpense,

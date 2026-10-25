@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/client';
 import LoadingSpinner from '../components/LoadingSpinner';
 import Modal from '../components/Modal';
 import Badge from '../components/Badge';
-import { Building2, Mail, Phone, Calendar, PlusCircle, AlertCircle, Sparkles } from 'lucide-react';
+import { Building2, Mail, Phone, PlusCircle, AlertCircle, Sparkles, UserCheck } from 'lucide-react';
 
 export default function Clubs() {
-  const { role } = useAuth();
+  const { role, user } = useAuth();
   const [clubs, setClubs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [scopeFilter, setScopeFilter] = useState('ALL');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -25,16 +27,49 @@ export default function Clubs() {
     facultyCoordinatorDept: ''
   });
 
+  const isSupervisedByMe = (club) => {
+    return (
+      (user?.supervisedClubs || []).some(
+        (id) => (id?._id || id)?.toString() === club._id?.toString()
+      ) ||
+      (club.facultyCoordinator?.user &&
+        (club.facultyCoordinator.user?._id || club.facultyCoordinator.user)?.toString() ===
+          (user?._id || user?.id)?.toString()) ||
+      (club.facultyCoordinator?.email &&
+        user?.email &&
+        club.facultyCoordinator.email.toLowerCase() === user.email.toLowerCase())
+    );
+  };
+
+  const isAssignedToMe = (club) => {
+    const currentUserId = (user?._id || user?.id)?.toString();
+    return (
+      (club.organizers || []).some(
+        (o) => (o?._id || o)?.toString() === currentUserId
+      ) ||
+      (user?.authorizedClubs || []).some(
+        (id) => (id?._id || id)?.toString() === club._id?.toString()
+      )
+    );
+  };
+
+  const canManage = (club) => {
+    if (role === 'admin') return true;
+    if (role === 'faculty') return isSupervisedByMe(club);
+    if (role === 'organizer') return isAssignedToMe(club);
+    return false;
+  };
+
   const fetchClubs = async () => {
     try {
       setLoading(true);
       const res = await api.get('/clubs');
-      if (res.data.success) {
+      if (res.data?.success && Array.isArray(res.data.clubs)) {
         setClubs(res.data.clubs);
       }
     } catch (err) {
       console.error(err);
-      setError('Failed to load clubs.');
+      setError('Failed to load campus club directory.');
     } finally {
       setLoading(false);
     }
@@ -66,7 +101,7 @@ export default function Clubs() {
       };
 
       const res = await api.post('/clubs', payload);
-      if (res.data.success) {
+      if (res.data?.success) {
         setIsModalOpen(false);
         setFormData({
           name: '',
@@ -81,7 +116,7 @@ export default function Clubs() {
         fetchClubs();
       }
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to create club.');
+      alert(err.response?.data?.message || 'Failed to register club.');
     } finally {
       setSubmitting(false);
     }
@@ -89,78 +124,177 @@ export default function Clubs() {
 
   const canCreate = role === 'admin' || role === 'organizer';
 
+  const myClubsCount = clubs.filter((c) =>
+    role === 'faculty' ? isSupervisedByMe(c) : isAssignedToMe(c)
+  ).length;
+
+  const displayClubs = clubs.filter((c) => {
+    if (scopeFilter === 'MY') {
+      if (role === 'faculty') return isSupervisedByMe(c);
+      if (role === 'organizer') return isAssignedToMe(c);
+    }
+    return true;
+  });
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="space-y-6 animate-fadeIn">
+      {/* Editorial Header */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-surface-border">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Campus Clubs & Societies</h1>
-          <p className="text-xs text-slate-500 mt-1">
-            Student organizations organizing college fests, competitions, and technical workshops
+          <div className="flex items-center gap-2 mb-2">
+            <span className="font-mono text-2xs uppercase tracking-widest text-brand-accent font-semibold">
+              Campus Guilds
+            </span>
+            <span className="text-surface-border">•</span>
+            <span className="text-2xs font-mono text-ink-muted">Registered Societies</span>
+          </div>
+          <h1 className="font-display font-bold text-3xl sm:text-4xl text-ink-primary tracking-tight">
+            Clubs & Societies
+          </h1>
+          <p className="text-xs text-ink-muted mt-1 max-w-2xl">
+            Directory of chartered student bodies organizing university fests, hackathons, and symposiums.
           </p>
         </div>
 
-        {canCreate && (
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow-sm transition-colors"
-          >
-            <PlusCircle className="w-4 h-4" />
-            <span>Register New Club</span>
-          </button>
-        )}
+        <div className="flex items-center gap-2 flex-wrap">
+          {(role === 'faculty' || role === 'organizer') && (
+            <div className="flex items-center bg-surface-secondary p-1 rounded-lg border border-surface-border">
+              <button
+                onClick={() => setScopeFilter('ALL')}
+                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
+                  scopeFilter === 'ALL'
+                    ? 'bg-white text-ink-primary shadow-subtle'
+                    : 'text-ink-muted hover:text-ink-primary'
+                }`}
+              >
+                All Clubs ({clubs.length})
+              </button>
+              <button
+                onClick={() => setScopeFilter('MY')}
+                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
+                  scopeFilter === 'MY'
+                    ? 'bg-white text-ink-primary shadow-subtle'
+                    : 'text-ink-muted hover:text-ink-primary'
+                }`}
+              >
+                {role === 'faculty' ? 'Supervised by Me' : 'My Clubs'} ({myClubsCount})
+              </button>
+            </div>
+          )}
+
+          {canCreate && (
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="btn-accent text-xs px-4 py-2.5 inline-flex items-center gap-2 shrink-0 self-start sm:self-auto"
+            >
+              <PlusCircle className="w-4 h-4" />
+              <span>Charter New Club</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {loading ? (
-        <LoadingSpinner message="Loading campus clubs..." />
-      ) : clubs.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-dashed border-slate-300 p-12 text-center">
-          <Building2 className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-          <h3 className="text-base font-semibold text-slate-800">No clubs registered yet</h3>
-          <p className="text-xs text-slate-500 mt-1">Add the first student club using the button above.</p>
+        <LoadingSpinner message="Scanning student societies register..." />
+      ) : displayClubs.length === 0 ? (
+        <div className="bg-surface-primary rounded-xl border border-dashed border-surface-border p-12 text-center max-w-md mx-auto">
+          <Building2 className="w-12 h-12 text-ink-muted/50 mx-auto mb-3" />
+          <h3 className="font-display font-bold text-lg text-ink-primary">
+            {scopeFilter === 'MY' ? 'No Clubs Assigned' : 'No Registered Clubs'}
+          </h3>
+          <p className="text-xs text-ink-muted mt-1">
+            {scopeFilter === 'MY'
+              ? role === 'faculty'
+                ? 'You are not currently assigned as supervisor for any club.'
+                : 'You have not been assigned as an organizer for any club yet.'
+              : 'Charter the first campus society or club using the button above.'}
+          </p>
+          {scopeFilter === 'MY' && (
+            <button
+              onClick={() => setScopeFilter('ALL')}
+              className="btn-secondary text-xs px-4 py-2 mt-4 inline-flex items-center gap-1.5"
+            >
+              Browse All Campus Clubs
+            </button>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {clubs.map((club) => (
+          {displayClubs.map((club) => (
             <div
               key={club._id}
-              className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between"
+              className="bg-surface-primary rounded-xl border border-surface-border p-6 shadow-subtle hover:border-brand-accent/40 transition-colors flex flex-col justify-between"
             >
               <div>
                 <div className="flex items-center justify-between gap-2 mb-3">
                   <Badge variant={club.category}>{club.category}</Badge>
-                  <span className="text-xs font-semibold px-2 py-0.5 bg-slate-100 text-slate-600 rounded-full">
-                    {club.eventCount || 0} Events
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    {role === 'faculty' && isSupervisedByMe(club) && (
+                      <span className="font-mono text-2xs uppercase tracking-wider text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                        Supervised
+                      </span>
+                    )}
+                    {role === 'organizer' && isAssignedToMe(club) && (
+                      <span className="font-mono text-2xs uppercase tracking-wider text-indigo-800 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
+                        My Club
+                      </span>
+                    )}
+                    <span className="font-mono text-2xs text-ink-muted bg-surface-secondary px-2 py-0.5 rounded border border-surface-border">
+                      {club.eventCount || 0} Events
+                    </span>
+                  </div>
                 </div>
 
-                <h3 className="text-lg font-bold text-slate-900 line-clamp-1">{club.name}</h3>
-                <p className="text-xs text-slate-600 mt-2 line-clamp-3 leading-relaxed">
+                <h3 className="font-display font-bold text-lg text-ink-primary line-clamp-1">{club.name}</h3>
+                <p className="text-xs text-ink-secondary mt-2 line-clamp-3 leading-relaxed font-sans">
                   {club.description}
                 </p>
 
-                {club.facultyCoordinator?.name && (
-                  <div className="mt-4 p-3 bg-slate-50 rounded-xl border border-slate-100 text-xs text-slate-700">
-                    <p className="font-semibold text-slate-900 flex items-center gap-1.5">
-                      <Sparkles className="w-3.5 h-3.5 text-indigo-500" /> Faculty Coordinator:
+                {club.facultyCoordinator?.name ? (
+                  <div className="mt-4 p-3 bg-surface-secondary/60 rounded-lg border border-surface-border text-xs">
+                    <p className="font-semibold text-ink-primary flex items-center gap-1.5 text-2xs uppercase tracking-wider font-mono text-brand-accent">
+                      <UserCheck className="w-3.5 h-3.5" /> Faculty Mentor:
                     </p>
-                    <p className="mt-0.5">{club.facultyCoordinator.name} ({club.facultyCoordinator.department || 'Staff'})</p>
+                    <p className="mt-1 text-ink-primary font-medium">{club.facultyCoordinator.name}</p>
+                    <p className="text-2xs text-ink-muted">{club.facultyCoordinator.department || 'Faculty Coordinator'}</p>
+                  </div>
+                ) : (
+                  <div className="mt-4 p-3 bg-amber-50/60 rounded-lg border border-amber-200 text-xs">
+                    <p className="font-semibold text-amber-900 flex items-center gap-1.5 text-2xs uppercase tracking-wider font-mono">
+                      <AlertCircle className="w-3.5 h-3.5 text-amber-700" /> Faculty Coordinator:
+                    </p>
+                    <p className="mt-1 text-amber-900 font-medium italic">Unassigned (Admin Review)</p>
                   </div>
                 )}
               </div>
 
-              <div className="mt-5 pt-4 border-t border-slate-100 space-y-1.5 text-xs text-slate-500">
-                {club.contactEmail && (
-                  <div className="flex items-center gap-2">
-                    <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                    <span className="truncate">{club.contactEmail}</span>
-                  </div>
-                )}
-                {club.contactPhone && (
-                  <div className="flex items-center gap-2">
-                    <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                    <span>{club.contactPhone}</span>
-                  </div>
-                )}
+              <div className="mt-5 pt-4 border-t border-surface-border space-y-2">
+                <div className="space-y-1.5 text-xs text-ink-muted">
+                  {club.contactEmail && (
+                    <div className="flex items-center gap-2">
+                      <Mail className="w-3.5 h-3.5 text-brand-accent shrink-0" />
+                      <span className="truncate">{club.contactEmail}</span>
+                    </div>
+                  )}
+                  {club.contactPhone && (
+                    <div className="flex items-center gap-2">
+                      <Phone className="w-3.5 h-3.5 text-brand-accent shrink-0" />
+                      <span>{club.contactPhone}</span>
+                    </div>
+                  )}
+                </div>
+
+                <Link
+                  to={`/manage/club/${club._id}`}
+                  className={`text-2xs w-full py-2 flex items-center justify-center gap-1.5 font-semibold mt-3 rounded-lg transition-colors ${
+                    canManage(club)
+                      ? 'btn-accent text-white'
+                      : 'btn-secondary text-ink-primary'
+                  }`}
+                >
+                  <Building2 className="w-3.5 h-3.5" />
+                  <span>{canManage(club) ? 'Manage Club' : 'View Club Dossier'}</span>
+                </Link>
               </div>
             </div>
           ))}
@@ -168,10 +302,10 @@ export default function Clubs() {
       )}
 
       {/* Create Club Modal */}
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Register a Campus Club">
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Charter a Campus Club">
         <form onSubmit={handleCreateClub} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Club Name *</label>
+            <label className="block text-xs font-semibold text-ink-secondary mb-1">Club Name *</label>
             <input
               type="text"
               name="name"
@@ -179,31 +313,31 @@ export default function Clubs() {
               value={formData.name}
               onChange={handleChange}
               placeholder="e.g. ACM Student Chapter"
-              className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+              className="input-field text-sm"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Description *</label>
+            <label className="block text-xs font-semibold text-ink-secondary mb-1">Charter Purpose & Scope *</label>
             <textarea
               name="description"
               required
               rows={3}
               value={formData.description}
               onChange={handleChange}
-              placeholder="Describe the club's primary purpose and focus..."
-              className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+              placeholder="Outline the society's objectives, target student body, and planned annual activities..."
+              className="input-field text-sm"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Category</label>
+              <label className="block text-xs font-semibold text-ink-secondary mb-1">Category</label>
               <select
                 name="category"
                 value={formData.category}
                 onChange={handleChange}
-                className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="input-field text-sm"
               >
                 <option value="Technical">Technical</option>
                 <option value="Cultural">Cultural</option>
@@ -215,20 +349,20 @@ export default function Clubs() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Contact Email</label>
+              <label className="block text-xs font-semibold text-ink-secondary mb-1">Contact Email</label>
               <input
                 type="email"
                 name="contactEmail"
                 value={formData.contactEmail}
                 onChange={handleChange}
-                placeholder="club@college.edu"
-                className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+                placeholder="society@college.edu"
+                className="input-field text-sm"
               />
             </div>
           </div>
 
-          <div className="pt-2 border-t border-slate-100">
-            <p className="text-xs font-bold text-slate-800 mb-2">Faculty Coordinator Details</p>
+          <div className="pt-3 border-t border-surface-border">
+            <p className="text-xs font-semibold text-ink-primary mb-2">Faculty Advisory</p>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <input
@@ -236,8 +370,8 @@ export default function Clubs() {
                   name="facultyCoordinatorName"
                   value={formData.facultyCoordinatorName}
                   onChange={handleChange}
-                  placeholder="Faculty Name"
-                  className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl"
+                  placeholder="Advisor Full Name"
+                  className="input-field text-xs"
                 />
               </div>
               <div>
@@ -246,27 +380,27 @@ export default function Clubs() {
                   name="facultyCoordinatorDept"
                   value={formData.facultyCoordinatorDept}
                   onChange={handleChange}
-                  placeholder="Department"
-                  className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl"
+                  placeholder="Department / School"
+                  className="input-field text-xs"
                 />
               </div>
             </div>
           </div>
 
-          <div className="pt-4 flex justify-end gap-2">
+          <div className="pt-4 flex justify-end gap-3 border-t border-surface-border">
             <button
               type="button"
               onClick={() => setIsModalOpen(false)}
-              className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800"
+              className="btn-secondary text-xs px-4 py-2"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-sm disabled:opacity-50"
+              className="btn-accent text-xs px-5 py-2 disabled:opacity-50"
             >
-              {submitting ? 'Registering...' : 'Save Club'}
+              {submitting ? 'Registering...' : 'Charter Club'}
             </button>
           </div>
         </form>

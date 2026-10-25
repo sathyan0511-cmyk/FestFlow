@@ -1,0 +1,26 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# Environment and local configs
+.env
+*.env.local
+
+# Databases and SQLite
+*.db
+*.sqlite3
+campusfix_dev.db
+
+# Pytest and coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Logs
+*.log

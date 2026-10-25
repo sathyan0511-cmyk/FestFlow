@@ -5,12 +5,18 @@ import Modal from '../components/Modal';
 import Badge from '../components/Badge';
 import { Utensils, Coffee, PlusCircle, CheckCircle2, Phone, Mail, DollarSign } from 'lucide-react';
 
+const formatINR = (val) => {
+  const num = Number(val);
+  return isNaN(num) ? '0' : num.toLocaleString('en-IN');
+};
+
 export default function CateringManager() {
   const [events, setEvents] = useState([]);
   const [selectedEventId, setSelectedEventId] = useState('');
   const [cateringOrders, setCateringOrders] = useState([]);
   const [totalCost, setTotalCost] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
   // Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -21,7 +27,7 @@ export default function CateringManager() {
     email: '',
     menuItems: [
       { menuItem: 'Buffet Lunch Meal', quantity: 100, costPerUnit: 120 },
-      { menuItem: 'Coffee & Snacks', quantity: 150, costPerUnit: 35 }
+      { menuItem: 'Coffee & Refreshments', quantity: 150, costPerUnit: 35 }
     ]
   });
 
@@ -29,10 +35,10 @@ export default function CateringManager() {
     try {
       setLoading(true);
       const res = await api.get('/events');
-      if (res.data.success && res.data.events.length > 0) {
+      if (res.data?.success && Array.isArray(res.data.events) && res.data.events.length > 0) {
         setEvents(res.data.events);
         setSelectedEventId(res.data.events[0]._id);
-        loadCatering(res.data.events[0]._id);
+        await loadCatering(res.data.events[0]._id);
       }
     } catch (err) {
       console.error(err);
@@ -42,10 +48,11 @@ export default function CateringManager() {
   };
 
   const loadCatering = async (eventId) => {
+    if (!eventId) return;
     try {
       const res = await api.get(`/catering/event/${eventId}`);
-      if (res.data.success) {
-        setCateringOrders(res.data.catering);
+      if (res.data?.success) {
+        setCateringOrders(res.data.catering || []);
         setTotalCost(res.data.totalCateringCost || 0);
       }
     } catch (err) {
@@ -60,17 +67,20 @@ export default function CateringManager() {
   const handleCreateCatering = async (e) => {
     e.preventDefault();
     try {
+      setSubmitting(true);
       const res = await api.post('/catering', {
         ...form,
         eventId: selectedEventId,
         menu: form.menuItems
       });
-      if (res.data.success) {
+      if (res.data?.success) {
         setIsModalOpen(false);
-        loadCatering(selectedEventId);
+        await loadCatering(selectedEventId);
       }
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to save catering');
+      alert(err.response?.data?.message || 'Failed to save catering order');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -87,37 +97,53 @@ export default function CateringManager() {
     });
   };
 
-  if (loading) return <LoadingSpinner message="Loading catering & hospitality services..." />;
+  if (loading) {
+    return <LoadingSpinner message="Calculating catering requisitions & menus..." />;
+  }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="space-y-6 animate-fadeIn">
+      {/* Editorial Header */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-surface-border">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Catering, Hospitality & Menu</h1>
-          <p className="text-xs text-slate-500 mt-1">
-            Normalized 1NF / 3NF meal orders: Atomic menu rows with Quantity × Cost_Per_Unit and dynamically computed total cost
+          <div className="flex items-center gap-2 mb-2">
+            <span className="font-mono text-2xs uppercase tracking-widest text-brand-accent font-semibold">
+              Hospitality Operations
+            </span>
+            <span className="text-surface-border">•</span>
+            <span className="text-2xs font-mono text-ink-muted">1NF Atomic Orders</span>
+          </div>
+          <h1 className="font-display font-bold text-3xl sm:text-4xl text-ink-primary tracking-tight">
+            Catering & Hospitality
+          </h1>
+          <p className="text-xs text-ink-muted mt-1 max-w-2xl">
+            Atomic food & beverage contracts: dynamic Quantity × Unit_Cost line-item calculations.
           </p>
         </div>
 
         <button
           onClick={() => setIsModalOpen(true)}
-          className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow-sm transition-colors flex items-center gap-1.5"
+          className="btn-accent text-xs px-4 py-2.5 inline-flex items-center gap-2 shrink-0 self-start sm:self-auto"
         >
-          <PlusCircle className="w-4 h-4" /> Book Catering Service
+          <PlusCircle className="w-4 h-4" />
+          <span>Book Catering Order</span>
         </button>
       </div>
 
       {/* Event Selector & Cost summary */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-2">
-          <label className="text-xs font-semibold text-slate-500 whitespace-nowrap">Select Fest / Event:</label>
+      <div className="bg-surface-primary rounded-xl border border-surface-border p-5 shadow-subtle flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <label htmlFor="catering-event-select" className="text-xs font-semibold text-ink-secondary whitespace-nowrap">
+            Festival Ledger:
+          </label>
           <select
+            id="catering-event-select"
             value={selectedEventId}
             onChange={(e) => {
               setSelectedEventId(e.target.value);
               loadCatering(e.target.value);
             }}
-            className="px-3 py-1.5 text-xs font-semibold bg-slate-50 border border-slate-200 rounded-xl"
+            className="px-3.5 py-1.5 text-xs font-medium bg-surface-primary border border-surface-border rounded-lg shadow-subtle"
           >
             {events.map((e) => (
               <option key={e._id} value={e._id}>{e.title}</option>
@@ -126,69 +152,54 @@ export default function CateringManager() {
         </div>
 
         <div className="text-left sm:text-right">
-          <span className="text-xs text-slate-500">Total Catering Expenditure (Derived):</span>
-          <p className="text-lg font-extrabold text-amber-600">₹{totalCost.toLocaleString()}</p>
+          <span className="text-2xs font-mono uppercase tracking-wider text-ink-muted">Total Food & Beverage Cost</span>
+          <p className="text-xl font-mono font-bold text-brand-accent mt-0.5">₹{formatINR(totalCost)}</p>
         </div>
       </div>
 
-      {/* Catering Orders List */}
-      {cateringOrders.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-dashed border-slate-300 p-12 text-center">
-          <Utensils className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-          <h3 className="text-base font-semibold text-slate-800">No catering orders registered</h3>
-          <p className="text-xs text-slate-500 mt-1">Schedule meals for attendees using the button above.</p>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {cateringOrders.map((order) => (
-            <div key={order._id} className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <Badge variant={order.status}>{order.status}</Badge>
-                    <span className="text-xs text-slate-400">
-                      Service Date: {new Date(order.serviceDate).toLocaleDateString()}
-                    </span>
+      {/* Orders List */}
+      <div className="space-y-4">
+        <h3 className="font-mono text-2xs uppercase tracking-widest text-ink-muted font-bold">
+          Active Hospitality Contracts ({cateringOrders.length})
+        </h3>
+
+        {cateringOrders.length === 0 ? (
+          <div className="bg-surface-primary rounded-xl border border-dashed border-surface-border p-8 text-center text-xs text-ink-muted">
+            No catering contracts assigned to this festival yet. Click "Book Catering Order" to requisition meals.
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {cateringOrders.map((ord) => (
+              <div key={ord._id} className="bg-surface-primary rounded-xl border border-surface-border p-6 shadow-subtle">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-surface-border">
+                  <div>
+                    <h4 className="font-display font-bold text-lg text-ink-primary">{ord.catererName}</h4>
+                    <p className="text-xs text-ink-muted mt-0.5">Liaison: {ord.contactPerson} • {ord.phone || 'No phone'}</p>
                   </div>
-                  <h3 className="text-lg font-bold text-slate-900">{order.catererName}</h3>
-                  <div className="flex items-center gap-4 text-xs text-slate-500 mt-1">
-                    <span>Contact: {order.contactPerson || 'Vendor'}</span>
-                    {order.phone && <span>📞 {order.phone}</span>}
-                    {order.email && <span>✉ {order.email}</span>}
+                  <div className="text-left sm:text-right">
+                    <span className="text-2xs font-mono uppercase text-ink-muted">Total Cost</span>
+                    <p className="font-mono font-bold text-base text-ink-primary">₹{formatINR(ord.totalCost)}</p>
                   </div>
                 </div>
 
-                <div className="text-left sm:text-right">
-                  <span className="text-xs text-slate-400">Order Total (Virtual):</span>
-                  <p className="text-base font-extrabold text-indigo-600">
-                    ₹{(order.totalCost || 0).toLocaleString()}
-                  </p>
-                </div>
-              </div>
-
-              {/* Atomic Menu Table (1NF Compliant) */}
-              <div>
-                <p className="text-xs font-bold text-slate-800 mb-2 flex items-center gap-1.5">
-                  <Coffee className="w-3.5 h-3.5 text-indigo-500" /> Itemized Menu Items (CATERING_MENU):
-                </p>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-xs text-left text-slate-700">
-                    <thead className="bg-slate-50 text-slate-500 font-semibold border-b">
+                <div className="mt-4 overflow-x-auto">
+                  <table className="w-full text-xs text-left">
+                    <thead className="bg-surface-secondary text-ink-muted font-mono text-2xs uppercase border-b border-surface-border">
                       <tr>
-                        <th className="py-2 px-3">Menu Item</th>
-                        <th className="py-2 px-3 text-center">Quantity</th>
-                        <th className="py-2 px-3 text-right">Cost Per Unit (₹)</th>
-                        <th className="py-2 px-3 text-right">Subtotal (₹)</th>
+                        <th className="py-2 px-3">Item / Course</th>
+                        <th className="py-2 px-3 text-right">Quantity</th>
+                        <th className="py-2 px-3 text-right">Unit Rate (₹)</th>
+                        <th className="py-2 px-3 text-right">Line Total (₹)</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {order.menu.map((item, idx) => (
-                        <tr key={idx}>
-                          <td className="py-2 px-3 font-medium text-slate-900">{item.menuItem}</td>
-                          <td className="py-2 px-3 text-center">{item.quantity}</td>
-                          <td className="py-2 px-3 text-right">₹{item.costPerUnit}</td>
-                          <td className="py-2 px-3 text-right font-semibold text-slate-800">
-                            ₹{(item.quantity * item.costPerUnit).toLocaleString()}
+                    <tbody className="divide-y divide-surface-border">
+                      {ord.menu?.map((m, idx) => (
+                        <tr key={idx} className="hover:bg-surface-secondary/40">
+                          <td className="py-2.5 px-3 font-medium text-ink-primary">{m.menuItem}</td>
+                          <td className="py-2.5 px-3 text-right font-mono">{m.quantity}</td>
+                          <td className="py-2.5 px-3 text-right font-mono">₹{formatINR(m.costPerUnit)}</td>
+                          <td className="py-2.5 px-3 text-right font-mono font-bold text-ink-primary">
+                            ₹{formatINR(m.quantity * m.costPerUnit)}
                           </td>
                         </tr>
                       ))}
@@ -196,95 +207,110 @@ export default function CateringManager() {
                   </table>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Book Catering Modal */}
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Book Catering Order & Menu">
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Commission Catering Order">
         <form onSubmit={handleCreateCatering} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Caterer / Vendor Name *</label>
+            <label className="block text-xs font-semibold text-ink-secondary mb-1">Caterer Agency / Vendor *</label>
             <input
               type="text"
               required
               value={form.catererName}
               onChange={(e) => setForm({ ...form, catererName: e.target.value })}
-              placeholder="e.g. Royal Feast Catering Co."
-              className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl"
+              placeholder="e.g. Royal Campus Kitchens"
+              className="input-field text-sm"
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Contact Person</label>
+              <label className="block text-xs font-semibold text-ink-secondary mb-1">Contact Person</label>
               <input
                 type="text"
                 value={form.contactPerson}
                 onChange={(e) => setForm({ ...form, contactPerson: e.target.value })}
-                className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl"
+                placeholder="Manager Name"
+                className="input-field text-sm"
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Phone</label>
+              <label className="block text-xs font-semibold text-ink-secondary mb-1">Phone</label>
               <input
                 type="tel"
                 value={form.phone}
                 onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl"
+                placeholder="Phone Number"
+                className="input-field text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-ink-secondary mb-1">Email</label>
+              <input
+                type="email"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                placeholder="Email Address"
+                className="input-field text-sm"
               />
             </div>
           </div>
 
-          {/* Atomic Menu Items */}
-          <div className="pt-2 border-t border-slate-100">
+          <div className="pt-3 border-t border-surface-border">
             <div className="flex items-center justify-between mb-2">
-              <label className="text-xs font-bold text-slate-800">Atomic Menu Items (Quantity & Unit Price)</label>
+              <span className="text-xs font-semibold text-ink-primary">Menu Line Items</span>
               <button
                 type="button"
                 onClick={addMenuRow}
-                className="text-[11px] font-bold text-indigo-600 hover:text-indigo-800"
+                className="text-xs text-brand-accent hover:text-brand-accent-hover font-semibold inline-flex items-center gap-1"
               >
-                + Add Item
+                <PlusCircle className="w-3.5 h-3.5" /> Add Row
               </button>
             </div>
 
             <div className="space-y-2">
               {form.menuItems.map((item, index) => (
-                <div key={index} className="grid grid-cols-5 gap-2 items-center">
+                <div key={index} className="grid grid-cols-12 gap-2">
                   <input
                     type="text"
                     required
-                    placeholder="Item Name"
                     value={item.menuItem}
                     onChange={(e) => handleMenuItemChange(index, 'menuItem', e.target.value)}
-                    className="col-span-3 px-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg"
+                    placeholder="Menu item"
+                    className="col-span-6 input-field text-xs"
                   />
                   <input
                     type="number"
-                    min={1}
-                    placeholder="Qty"
+                    required
+                    min="1"
                     value={item.quantity}
                     onChange={(e) => handleMenuItemChange(index, 'quantity', e.target.value)}
-                    className="px-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg"
+                    placeholder="Qty"
+                    className="col-span-3 input-field text-xs"
                   />
                   <input
                     type="number"
-                    min={0}
-                    placeholder="₹ Unit"
+                    required
+                    min="1"
                     value={item.costPerUnit}
                     onChange={(e) => handleMenuItemChange(index, 'costPerUnit', e.target.value)}
-                    className="px-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg"
+                    placeholder="₹ Rate"
+                    className="col-span-3 input-field text-xs"
                   />
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="pt-3 flex justify-end gap-2">
-            <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-xs font-semibold text-slate-600">Cancel</button>
-            <button type="submit" className="px-5 py-2 bg-indigo-600 text-white text-xs font-bold rounded-xl">Save Catering Order</button>
+          <div className="pt-4 flex justify-end gap-3 border-t border-surface-border">
+            <button type="button" onClick={() => setIsModalOpen(false)} className="btn-secondary text-xs px-4 py-2">Cancel</button>
+            <button type="submit" disabled={submitting} className="btn-accent text-xs px-5 py-2 disabled:opacity-50">
+              {submitting ? 'Commissioning...' : 'Save Order'}
+            </button>
           </div>
         </form>
       </Modal>

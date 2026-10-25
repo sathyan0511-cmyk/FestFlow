@@ -4,7 +4,7 @@ import api from '../api/client';
 import LoadingSpinner from '../components/LoadingSpinner';
 import Modal from '../components/Modal';
 import Badge from '../components/Badge';
-import { MapPin, Users, PlusCircle, CheckCircle2, ShieldCheck, Building } from 'lucide-react';
+import { MapPin, Users, PlusCircle, CheckCircle2, Building } from 'lucide-react';
 
 export default function Venues() {
   const { role } = useAuth();
@@ -25,7 +25,7 @@ export default function Venues() {
     try {
       setLoading(true);
       const res = await api.get('/venues');
-      if (res.data.success) {
+      if (res.data?.success && Array.isArray(res.data.venues)) {
         setVenues(res.data.venues);
       }
     } catch (err) {
@@ -61,7 +61,7 @@ export default function Venues() {
         facilities
       });
 
-      if (res.data.success) {
+      if (res.data?.success) {
         setIsModalOpen(false);
         setFormData({
           name: '',
@@ -73,7 +73,7 @@ export default function Venues() {
         fetchVenues();
       }
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to create venue.');
+      alert(err.response?.data?.message || 'Failed to register venue.');
     } finally {
       setSubmitting(false);
     }
@@ -82,19 +82,29 @@ export default function Venues() {
   const canCreate = role === 'admin' || role === 'organizer';
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="space-y-6 animate-fadeIn">
+      {/* Editorial Header */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-surface-border">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Campus Venues & Auditoriums</h1>
-          <p className="text-xs text-slate-500 mt-1">
-            Check hall capacities, multimedia equipment, and availability for fests
+          <div className="flex items-center gap-2 mb-2">
+            <span className="font-mono text-2xs uppercase tracking-widest text-brand-accent font-semibold">
+              Estate & Facilities
+            </span>
+            <span className="text-surface-border">•</span>
+            <span className="text-2xs font-mono text-ink-muted">Campus Logistics</span>
+          </div>
+          <h1 className="font-display font-bold text-3xl sm:text-4xl text-ink-primary tracking-tight">
+            Venues & Auditoriums
+          </h1>
+          <p className="text-xs text-ink-muted mt-1 max-w-2xl">
+            Check seating capacities, acoustic equipment, multimedia facilities, and reservation status.
           </p>
         </div>
 
         {canCreate && (
           <button
             onClick={() => setIsModalOpen(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow-sm transition-colors"
+            className="btn-accent text-xs px-4 py-2.5 inline-flex items-center gap-2 shrink-0 self-start sm:self-auto"
           >
             <PlusCircle className="w-4 h-4" />
             <span>Add Campus Venue</span>
@@ -103,49 +113,50 @@ export default function Venues() {
       </div>
 
       {loading ? (
-        <LoadingSpinner message="Loading venues..." />
+        <LoadingSpinner message="Scanning campus facility registries..." />
       ) : venues.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-dashed border-slate-300 p-12 text-center">
-          <MapPin className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-          <h3 className="text-base font-semibold text-slate-800">No venues configured yet</h3>
+        <div className="bg-surface-primary rounded-xl border border-dashed border-surface-border p-12 text-center max-w-md mx-auto">
+          <MapPin className="w-12 h-12 text-ink-muted/50 mx-auto mb-3" />
+          <h3 className="font-display font-bold text-lg text-ink-primary">No Venues Configured</h3>
+          <p className="text-xs text-ink-muted mt-1">
+            Configure campus auditoriums, seminar halls, and grounds using the button above.
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {venues.map((venue) => (
             <div
               key={venue._id}
-              className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between"
+              className="bg-surface-primary rounded-xl border border-surface-border p-6 shadow-subtle hover:border-brand-accent/40 transition-colors flex flex-col justify-between"
             >
               <div>
                 <div className="flex items-center justify-between gap-2 mb-3">
-                  <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">
-                    {venue.venueType}
-                  </span>
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700 bg-slate-100 px-2.5 py-0.5 rounded-full">
-                    <Users className="w-3.5 h-3.5 text-slate-500" />
+                  <Badge variant="outline">{venue.venueType}</Badge>
+                  <div className="flex items-center gap-1.5 text-xs font-mono font-semibold text-ink-primary bg-surface-secondary px-2.5 py-0.5 rounded border border-surface-border">
+                    <Users className="w-3.5 h-3.5 text-brand-accent" />
                     <span>{venue.capacity} Seats</span>
                   </div>
                 </div>
 
-                <h3 className="text-lg font-bold text-slate-900">{venue.name}</h3>
-                <p className="text-xs text-slate-500 mt-1 flex items-center gap-1.5">
-                  <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                <h3 className="font-display font-bold text-lg text-ink-primary">{venue.name}</h3>
+                <p className="text-xs text-ink-muted mt-1 flex items-center gap-1.5">
+                  <MapPin className="w-3.5 h-3.5 text-brand-accent shrink-0" />
                   <span>{venue.location}</span>
                 </p>
 
                 {/* Facilities List */}
                 {venue.facilities && venue.facilities.length > 0 && (
-                  <div className="mt-4 pt-3 border-t border-slate-100">
-                    <p className="text-[11px] uppercase tracking-wider font-bold text-slate-400 mb-2">
-                      Equipped Facilities
+                  <div className="mt-4 pt-3 border-t border-surface-border">
+                    <p className="font-mono text-2xs uppercase tracking-wider font-semibold text-ink-muted mb-2">
+                      Equipped Amenities
                     </p>
                     <div className="flex flex-wrap gap-1.5">
                       {venue.facilities.map((fac, idx) => (
                         <span
                           key={idx}
-                          className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-md bg-slate-50 text-slate-700 border border-slate-200"
+                          className="inline-flex items-center gap-1 text-2xs px-2 py-0.5 rounded bg-surface-secondary text-ink-secondary border border-surface-border"
                         >
-                          <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                          <CheckCircle2 className="w-3 h-3 text-status-success" />
                           {fac.name}
                         </span>
                       ))}
@@ -154,10 +165,11 @@ export default function Venues() {
                 )}
               </div>
 
-              <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                <span>Status:</span>
-                <span className="font-semibold text-emerald-600 capitalize">
-                  ● {venue.status || 'Available'}
+              <div className="mt-5 pt-3 border-t border-surface-border flex items-center justify-between text-xs text-ink-muted">
+                <span className="font-mono text-2xs uppercase">Operational Status</span>
+                <span className="font-mono text-2xs font-bold text-status-success capitalize flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-status-success" />
+                  {venue.status || 'Available'}
                 </span>
               </div>
             </div>
@@ -166,55 +178,55 @@ export default function Venues() {
       )}
 
       {/* Create Venue Modal */}
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Add Campus Venue">
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Register Campus Venue">
         <form onSubmit={handleCreateVenue} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Venue Name *</label>
+            <label className="block text-xs font-semibold text-ink-secondary mb-1">Venue Name *</label>
             <input
               type="text"
               name="name"
               required
               value={formData.name}
               onChange={handleChange}
-              placeholder="e.g. Vikram Sarabhai Seminar Hall"
-              className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+              placeholder="e.g. Vikram Sarabhai Main Auditorium"
+              className="input-field text-sm"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Location Details *</label>
+            <label className="block text-xs font-semibold text-ink-secondary mb-1">Location / Block *</label>
             <input
               type="text"
               name="location"
               required
               value={formData.location}
               onChange={handleChange}
-              placeholder="e.g. Electrical Sciences Block, 2nd Floor"
-              className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+              placeholder="e.g. Science & Technology Quadrangle, Ground Floor"
+              className="input-field text-sm"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Capacity (Seats) *</label>
+              <label className="block text-xs font-semibold text-ink-secondary mb-1">Seating Capacity *</label>
               <input
                 type="number"
                 name="capacity"
                 required
-                min={1}
+                min="1"
                 value={formData.capacity}
                 onChange={handleChange}
-                className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="input-field text-sm"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Venue Type</label>
+              <label className="block text-xs font-semibold text-ink-secondary mb-1">Facility Type</label>
               <select
                 name="venueType"
                 value={formData.venueType}
                 onChange={handleChange}
-                className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="input-field text-sm"
               >
                 <option value="Auditorium">Auditorium</option>
                 <option value="Seminar Hall">Seminar Hall</option>
@@ -227,33 +239,33 @@ export default function Venues() {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
-              Facilities (comma-separated)
+            <label className="block text-xs font-semibold text-ink-secondary mb-1">
+              Equipped Amenities (comma-separated)
             </label>
             <input
               type="text"
               name="facilityList"
               value={formData.facilityList}
               onChange={handleChange}
-              placeholder="Projector, Central AC, High-speed Wi-Fi, Microphones"
-              className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+              placeholder="Digital Projector, Acoustic PA System, High-speed Wi-Fi, HVAC"
+              className="input-field text-sm"
             />
           </div>
 
-          <div className="pt-4 flex justify-end gap-2">
+          <div className="pt-4 flex justify-end gap-3 border-t border-surface-border">
             <button
               type="button"
               onClick={() => setIsModalOpen(false)}
-              className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800"
+              className="btn-secondary text-xs px-4 py-2"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-sm disabled:opacity-50"
+              className="btn-accent text-xs px-5 py-2 disabled:opacity-50"
             >
-              {submitting ? 'Adding...' : 'Save Venue'}
+              {submitting ? 'Registering...' : 'Save Venue'}
             </button>
           </div>
         </form>

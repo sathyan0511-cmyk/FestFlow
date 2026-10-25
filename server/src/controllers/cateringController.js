@@ -1,6 +1,7 @@
 const Catering = require('../models/Catering');
 const { Expense } = require('../models/Finance');
 const Event = require('../models/Event');
+const { isAuthorizedForClub } = require('../utils/clubAuthorization');
 
 // @desc    Get catering details and menu items for an event
 // @route   GET /api/catering/event/:eventId
@@ -31,6 +32,14 @@ const saveCatering = async (req, res, next) => {
 
     const event = await Event.findById(eventId);
     if (!event) return res.status(404).json({ success: false, message: 'Event not found' });
+
+    const authorized = await isAuthorizedForClub(req.user, event.club);
+    if (!authorized) {
+      return res.status(403).json({
+        success: false,
+        message: 'Forbidden: You are not authorized to book catering for this club.'
+      });
+    }
 
     const catering = await Catering.create({
       event: eventId,

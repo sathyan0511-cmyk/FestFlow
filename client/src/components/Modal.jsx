@@ -19,20 +19,23 @@ export default function Modal({ isOpen, onClose, title, children, maxWidth = 'ma
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink-primary/60 backdrop-blur-sm animate-fade-in">
       <div
-        className={`bg-white rounded-2xl shadow-xl w-full ${maxWidth} overflow-hidden border border-slate-100 transform transition-all`}
+        className={`bg-surface-primary rounded-xl shadow-fest-lg w-full ${maxWidth} overflow-hidden border border-edge transform transition-all`}
+        role="dialog"
+        aria-modal="true"
       >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
-          <h3 className="text-lg font-semibold text-slate-800">{title}</h3>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-edge bg-canvas-warm/60">
+          <h3 className="text-base font-bold text-ink-primary tracking-tight font-sans">{title}</h3>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 rounded-lg p-1 hover:bg-slate-100 transition-colors"
+            className="text-ink-muted hover:text-ink-primary rounded-lg p-1.5 hover:bg-canvas-muted transition-colors"
+            aria-label="Close dialog"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
-        <div className="p-6 max-h-[80vh] overflow-y-auto">{children}</div>
+        <div className="p-6 max-h-[82vh] overflow-y-auto">{children}</div>
       </div>
     </div>
   );

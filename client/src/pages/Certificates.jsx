@@ -20,7 +20,7 @@ export default function Certificates() {
     try {
       setLoading(true);
       const res = await api.get('/certificates/my');
-      if (res.data.success) {
+      if (res.data?.success && Array.isArray(res.data.certificates)) {
         setCertificates(res.data.certificates);
       }
     } catch (err) {
@@ -43,72 +43,100 @@ export default function Certificates() {
       setVerifyError('');
       setVerifiedResult(null);
       const res = await api.get(`/certificates/verify/${searchCode.trim()}`);
-      if (res.data.success) {
+      if (res.data?.success) {
         setVerifiedResult(res.data.certificate);
       }
     } catch (err) {
-      setVerifyError(err.response?.data?.message || 'Certificate not found or invalid.');
+      setVerifyError(err.response?.data?.message || 'Certificate credential not found or signature invalid.');
     } finally {
       setVerifying(false);
     }
   };
 
-  if (loading) return <LoadingSpinner message="Loading your e-credentials & certificates..." />;
+  if (loading) {
+    return <LoadingSpinner message="Querying academic cryptographic certificates..." />;
+  }
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">E-Certificates & Credential Verification</h1>
-        <p className="text-xs text-slate-500 mt-1">
-          Official digital credentials for event participation, merit awards, volunteering, and public verification
-        </p>
+    <div className="space-y-8 max-w-5xl mx-auto animate-fadeIn">
+      {/* Editorial Header */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-surface-border">
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <span className="font-mono text-2xs uppercase tracking-widest text-brand-accent font-semibold">
+              Registrar Credentials
+            </span>
+            <span className="text-surface-border">•</span>
+            <span className="text-2xs font-mono text-ink-muted">Public Verification</span>
+          </div>
+          <h1 className="font-display font-bold text-3xl sm:text-4xl text-ink-primary tracking-tight">
+            Certificates & Credentials
+          </h1>
+          <p className="text-xs text-ink-muted mt-1 max-w-2xl">
+            Official digital certificates issued for festival participation, competitive merit, and volunteer leadership.
+          </p>
+        </div>
       </div>
 
       {/* Public Verification Box */}
-      <div className="bg-gradient-to-r from-indigo-900 to-slate-900 rounded-2xl text-white p-6 shadow-md">
-        <div className="max-w-2xl">
-          <div className="flex items-center gap-2 text-indigo-300 text-xs font-semibold uppercase tracking-wider mb-1">
-            <ShieldCheck className="w-4 h-4 text-emerald-400" /> Tamper-Proof Verification Portal
+      <div className="bg-surface-primary border border-surface-border rounded-xl p-6 sm:p-8 shadow-subtle relative overflow-hidden">
+        {/* Accent Bar */}
+        <div className="absolute top-0 left-0 w-1.5 h-full bg-brand-accent" />
+
+        <div className="max-w-2xl pl-2">
+          <div className="flex items-center gap-2 mb-2">
+            <ShieldCheck className="w-4 h-4 text-status-success" />
+            <span className="font-mono text-2xs uppercase tracking-widest text-ink-muted font-semibold">
+              Live University Verification Portal
+            </span>
           </div>
-          <h2 className="text-lg font-bold text-white">Verify a Certificate Authenticity</h2>
-          <p className="text-xs text-slate-300 mt-1">
-            Enter the unique verification code printed on any FestFlow certificate to inspect live college records.
+          <h2 className="font-display font-bold text-xl text-ink-primary">
+            Verify Certificate Authenticity
+          </h2>
+          <p className="text-xs text-ink-muted mt-1">
+            Enter the unique verification code printed on any FestFlow certificate to inspect verified university records.
           </p>
 
-          <form onSubmit={handleVerify} className="mt-4 flex gap-2">
+          <form onSubmit={handleVerify} className="mt-5 flex gap-2.5">
             <input
               type="text"
               value={searchCode}
               onChange={(e) => setSearchCode(e.target.value)}
               placeholder="e.g. V-FEST26-8812"
-              className="flex-1 px-3.5 py-2 text-xs bg-slate-800/80 border border-slate-700 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400 font-mono"
+              className="input-field text-xs font-mono flex-1"
             />
             <button
               type="submit"
               disabled={verifying}
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl transition-colors shadow-sm disabled:opacity-50 flex items-center gap-1.5"
+              className="btn-accent text-xs px-5 py-2.5 flex items-center gap-2 disabled:opacity-50 shrink-0"
             >
-              <Search className="w-3.5 h-3.5" />
-              {verifying ? 'Checking...' : 'Verify'}
+              <Search className="w-4 h-4" />
+              <span>{verifying ? 'Verifying...' : 'Verify Signature'}</span>
             </button>
           </form>
 
           {verifyError && (
-            <div className="mt-3 p-3 bg-rose-950/60 border border-rose-800 text-rose-200 rounded-xl text-xs flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+            <div className="mt-4 p-3.5 bg-rose-50 border border-rose-200 text-status-error rounded-lg text-xs flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0" />
               <span>{verifyError}</span>
             </div>
           )}
 
           {verifiedResult && (
-            <div className="mt-4 p-4 bg-emerald-950/70 border border-emerald-600/60 rounded-xl text-xs text-emerald-200 space-y-1 animate-fade-in">
-              <div className="flex items-center gap-2 text-emerald-400 font-bold text-sm">
-                <CheckCircle2 className="w-4 h-4" /> Official Verified Certificate
+            <div className="mt-5 p-5 bg-surface-secondary/70 border border-status-success/30 rounded-xl text-xs space-y-2">
+              <div className="flex items-center gap-2 text-status-success font-bold text-sm">
+                <CheckCircle2 className="w-4 h-4" />
+                <span>Verified Official Credential</span>
               </div>
-              <p className="text-white font-medium">Issued to: <span className="font-bold">{verifiedResult.user?.name}</span> ({verifiedResult.user?.department || 'Student'})</p>
-              <p className="text-slate-300">Event: <span className="text-white font-semibold">{verifiedResult.event?.title}</span></p>
-              <p className="text-slate-300">Type: <span className="capitalize font-semibold text-emerald-300">{verifiedResult.certificateType} Certificate</span></p>
-              <p className="text-[10px] text-slate-400 font-mono pt-1">Certificate #{verifiedResult.certificateNo} • Issued on {new Date(verifiedResult.issueDate).toLocaleDateString()}</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-surface-border text-ink-primary">
+                <p><span className="text-ink-muted">Conferred to:</span> <strong>{verifiedResult.user?.name}</strong></p>
+                <p><span className="text-ink-muted">Department:</span> {verifiedResult.user?.department || 'University Scholar'}</p>
+                <p><span className="text-ink-muted">Festival / Event:</span> <strong>{verifiedResult.event?.title}</strong></p>
+                <p><span className="text-ink-muted">Credential Type:</span> <span className="capitalize font-mono font-bold text-brand-accent">{verifiedResult.certificateType}</span></p>
+              </div>
+              <p className="text-2xs font-mono text-ink-muted pt-2 border-t border-surface-border">
+                Certificate ID: #{verifiedResult.certificateNo} • Date Issued: {new Date(verifiedResult.issueDate).toLocaleDateString()}
+              </p>
             </div>
           )}
         </div>
@@ -116,49 +144,46 @@ export default function Certificates() {
 
       {/* My Certificates Grid */}
       <div className="space-y-4">
-        <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider text-xs">
-          My Earned Certificates ({certificates.length})
+        <h3 className="font-mono text-2xs uppercase tracking-widest text-ink-muted font-bold">
+          My Earned Credentials ({certificates.length})
         </h3>
 
         {certificates.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-dashed border-slate-300 p-12 text-center text-xs text-slate-500">
-            <Award className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-            <h4 className="text-sm font-bold text-slate-700">No certificates issued yet</h4>
-            <p className="mt-1">Attend campus competitions and festivals to earn verified merit certificates.</p>
+          <div className="bg-surface-primary rounded-xl border border-dashed border-surface-border p-12 text-center max-w-md mx-auto">
+            <Award className="w-12 h-12 text-ink-muted/50 mx-auto mb-3" />
+            <h4 className="font-display font-bold text-base text-ink-primary">No Certificates Issued</h4>
+            <p className="text-xs text-ink-muted mt-1">
+              Certificates of participation, merit, and volunteering are published here following event completion.
+            </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {certificates.map((cert) => (
               <div
                 key={cert._id}
-                className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden flex flex-col justify-between"
+                className="bg-surface-primary rounded-xl border border-surface-border p-6 shadow-subtle flex flex-col justify-between"
               >
                 <div>
                   <div className="flex items-center justify-between gap-2 mb-3">
-                    <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 uppercase tracking-wider text-[10px]">
-                      {cert.certificateType} Award
+                    <span className="font-mono text-2xs uppercase tracking-wider font-bold text-brand-accent bg-surface-secondary px-2.5 py-0.5 rounded border border-surface-border">
+                      {cert.certificateType}
                     </span>
-                    <Badge variant={cert.status}>{cert.status}</Badge>
+                    <span className="font-mono text-2xs text-ink-muted">
+                      #{cert.certificateNo}
+                    </span>
                   </div>
 
-                  <h3 className="text-base font-bold text-slate-900">{cert.event?.title}</h3>
-                  <p className="text-xs text-slate-500 mt-1 flex items-center gap-1.5">
-                    <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                    <span>Issued on {new Date(cert.issueDate).toLocaleDateString()}</span>
-                  </p>
+                  <h4 className="font-display font-bold text-lg text-ink-primary">{cert.event?.title}</h4>
+                  <p className="text-xs text-ink-muted mt-1">Conferred upon: {cert.user?.name}</p>
                 </div>
 
-                <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between text-xs">
-                  <div>
-                    <span className="text-[10px] uppercase font-semibold text-slate-400 block">Verification Code:</span>
-                    <span className="font-mono font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">
-                      {cert.verificationCode}
-                    </span>
-                  </div>
-
-                  <div className="text-right">
-                    <span className="text-[10px] text-slate-400 block font-mono">#{cert.certificateNo}</span>
-                  </div>
+                <div className="mt-5 pt-3 border-t border-surface-border flex items-center justify-between text-xs">
+                  <span className="font-mono text-2xs text-ink-muted">
+                    Issued on {new Date(cert.issueDate).toLocaleDateString()}
+                  </span>
+                  <span className="font-mono text-2xs font-bold text-status-success flex items-center gap-1">
+                    <CheckCircle2 className="w-3.5 h-3.5" /> Verified
+                  </span>
                 </div>
               </div>
             ))}

@@ -32,9 +32,16 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ['admin', 'organizer', 'student'],
+      enum: ['admin', 'organizer', 'student', 'faculty'],
       default: 'student'
     },
+    // Multi-club organizer associations (backward-compatible)
+    clubs: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Club'
+      }
+    ],
     participantType: {
       type: String,
       enum: ['student', 'external'],

@@ -21,6 +21,7 @@ const financeRoutes = require('./routes/financeRoutes');
 const sponsorRoutes = require('./routes/sponsorRoutes');
 const cateringRoutes = require('./routes/cateringRoutes');
 const competitionRoutes = require('./routes/competitionRoutes');
+const facultyRoutes = require('./routes/facultyRoutes');
 
 const app = express();
 
@@ -78,6 +79,7 @@ app.use('/api/finances', financeRoutes);
 app.use('/api/sponsors', sponsorRoutes);
 app.use('/api/catering', cateringRoutes);
 app.use('/api/competitions', competitionRoutes);
+app.use('/api/faculty', facultyRoutes);
 
 // 404 Handler
 app.use((req, res) => {

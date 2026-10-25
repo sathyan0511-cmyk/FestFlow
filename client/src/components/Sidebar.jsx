@@ -8,42 +8,69 @@ import {
   MapPin,
   Ticket,
   PlusCircle,
-  Sparkles,
-  ShieldAlert,
   X,
   Trophy,
   Wallet,
   Briefcase,
   Utensils,
   Award,
-  HeartHandshake
+  HeartHandshake,
+  ShieldCheck,
+  Compass,
+  UserCheck,
+  Users
 } from 'lucide-react';
 
 export default function Sidebar({ isOpen, onClose }) {
   const { user, role } = useAuth();
 
-  const navItems = [
-    { label: 'Dashboard', to: '/', icon: LayoutDashboard },
-    { label: 'Events & Fests', to: '/events', icon: CalendarDays },
-    { label: 'Competitions', to: '/competitions', icon: Trophy },
-    { label: 'Campus Clubs', to: '/clubs', icon: Building2 },
-    { label: 'Venues & Halls', to: '/venues', icon: MapPin },
-    { label: 'Sponsors', to: '/sponsors', icon: Briefcase },
-    { label: 'Catering & Menu', to: '/catering', icon: Utensils },
-    { label: 'E-Certificates', to: '/certificates', icon: Award }
-  ];
+  // Role-appropriate navigation items
+  let navItems = [];
 
-  if (role === 'student') {
-    navItems.push(
+  if (role === 'organizer') {
+    navItems = [
+      { label: 'Overview', to: '/', icon: LayoutDashboard },
+      { label: 'My Clubs', to: '/clubs', icon: Building2 },
+      { label: 'My Club Events', to: '/events?filter=my-clubs', icon: CalendarDays },
       { label: 'My Event Passes', to: '/my-registrations', icon: Ticket },
+      { label: 'Event Discovery', to: '/events', icon: Compass },
+      { label: 'Event Finances', to: '/finances', icon: Wallet },
+      { label: 'Sponsorships', to: '/sponsors', icon: Briefcase },
+      { label: 'Catering & Menu', to: '/catering', icon: Utensils }
+    ];
+  } else if (role === 'faculty') {
+    navItems = [
+      { label: 'Overview', to: '/', icon: LayoutDashboard },
+      { label: 'My Clubs', to: '/clubs', icon: Building2 },
+      { label: 'Organizer Assignments', to: '/faculty/organizers', icon: UserCheck },
+      { label: 'Campus Schedule', to: '/events', icon: Compass },
+      { label: 'My Event Passes', to: '/my-registrations', icon: Ticket }
+    ];
+  } else if (role === 'student') {
+    navItems = [
+      { label: 'Overview', to: '/', icon: LayoutDashboard },
+      { label: 'Event Discovery', to: '/events', icon: Compass },
+      { label: 'My Event Passes', to: '/my-registrations', icon: Ticket },
+      { label: 'My Clubs', to: '/clubs', icon: Building2 },
+      { label: 'Competitions', to: '/competitions', icon: Trophy },
+      { label: 'E-Certificates', to: '/certificates', icon: Award },
       { label: 'Volunteering', to: '/volunteering', icon: HeartHandshake }
-    );
-  }
-
-  if (role === 'admin' || role === 'organizer') {
-    navItems.push(
-      { label: 'Event Finances', to: '/finances', icon: Wallet }
-    );
+    ];
+  } else {
+    // Admin navigation
+    navItems = [
+      { label: 'Overview', to: '/', icon: LayoutDashboard },
+      { label: 'Event Discovery', to: '/events', icon: Compass },
+      { label: 'My Event Passes', to: '/my-registrations', icon: Ticket },
+      { label: 'My Clubs', to: '/clubs', icon: Building2 },
+      { label: 'Faculty Management', to: '/admin/faculty', icon: ShieldCheck },
+      { label: 'Venues & Halls', to: '/venues', icon: MapPin },
+      { label: 'Competitions', to: '/competitions', icon: Trophy },
+      { label: 'Event Finances', to: '/finances', icon: Wallet },
+      { label: 'Sponsorships', to: '/sponsors', icon: Briefcase },
+      { label: 'Catering & Menu', to: '/catering', icon: Utensils },
+      { label: 'E-Certificates', to: '/certificates', icon: Award }
+    ];
   }
 
   const canCreateEvents = role === 'admin' || role === 'organizer';
@@ -54,57 +81,58 @@ export default function Sidebar({ isOpen, onClose }) {
       {isOpen && (
         <div
           onClick={onClose}
-          className="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-40 bg-ink-primary/50 backdrop-blur-sm lg:hidden transition-opacity"
         />
       )}
 
       <aside
-        className={`fixed top-0 bottom-0 left-0 z-50 w-64 bg-slate-900 text-white flex flex-col justify-between transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+        className={`fixed top-0 bottom-0 left-0 z-50 w-64 bg-[#181818] text-[#EFEFEA] flex flex-col justify-between border-r border-[#2C2C29] transition-transform duration-200 ease-in-out lg:translate-x-0 ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         <div className="flex-1 flex flex-col min-h-0">
-          {/* Brand header */}
-          <div className="h-16 flex items-center justify-between px-6 border-b border-slate-800 shrink-0">
-            <NavLink to="/" className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-500 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/30">
-                <Sparkles className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <span className="font-extrabold text-lg tracking-tight bg-gradient-to-r from-white via-slate-100 to-indigo-200 bg-clip-text text-transparent">
-                  FestFlow
+          {/* Brand Wordmark Header */}
+          <div className="h-16 flex items-center justify-between px-6 border-b border-[#2C2C29] shrink-0">
+            <NavLink to="/" className="flex items-center gap-2.5 group">
+              <span className="w-7 h-7 rounded-md bg-accent flex items-center justify-center font-display font-bold text-white text-base">
+                F
+              </span>
+              <div className="flex flex-col">
+                <span className="font-display text-xl font-bold tracking-tight text-white flex items-center">
+                  FestFlow<span className="text-accent font-sans">.</span>
                 </span>
-                <span className="text-[10px] block font-semibold uppercase tracking-wider text-indigo-400">
-                  Campus Events
+                <span className="text-[9px] font-semibold tracking-widest uppercase text-white/50 -mt-1">
+                  Campus Platform
                 </span>
               </div>
             </NavLink>
             <button
               onClick={onClose}
-              className="lg:hidden text-slate-400 hover:text-white p-1 rounded-lg"
+              className="lg:hidden text-white/60 hover:text-white p-1 rounded-md"
+              aria-label="Close menu"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
 
-          {/* Organizer / Admin Quick Action */}
+          {/* Quick Action for Organizers / Admins */}
           {canCreateEvents && (
             <div className="px-4 pt-4 pb-1 shrink-0">
               <NavLink
                 to="/events/create"
                 onClick={onClose}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white text-xs font-semibold rounded-xl shadow-md shadow-indigo-900/40 transition-all hover:shadow-lg"
+                className="w-full btn-accent py-2 text-xs"
               >
                 <PlusCircle className="w-4 h-4" />
-                <span>Create New Event</span>
+                <span>Host New Event</span>
               </NavLink>
             </div>
           )}
 
-          {/* Navigation Links Scrollable */}
-          <nav className="flex-1 px-3 py-3 space-y-0.5 overflow-y-auto">
-            <p className="px-3 text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
-              Navigation
+          {/* Navigation Links */}
+          <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+            <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-white/40 mb-2">
+              {role === 'faculty' ? 'Faculty Console' : role === 'organizer' ? 'Club Operations' : role === 'admin' ? 'Administration' : 'Student Portal'}
             </p>
             {navItems.map((item) => {
               const Icon = item.icon;
@@ -115,29 +143,34 @@ export default function Sidebar({ isOpen, onClose }) {
                   end={item.to === '/'}
                   onClick={onClose}
                   className={({ isActive }) =>
-                    `flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-colors ${
+                    `flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
                       isActive
-                        ? 'bg-indigo-600/90 text-white shadow-sm'
-                        : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+                        ? 'bg-accent text-white font-semibold shadow-fest-sm'
+                        : 'text-white/70 hover:text-white hover:bg-white/5'
                     }`
                   }
                 >
-                  <Icon className="w-4 h-4 text-slate-400 group-hover:text-white" />
-                  <span>{item.label}</span>
+                  <Icon className="w-4 h-4 shrink-0 opacity-80" />
+                  <span className="truncate">{item.label}</span>
                 </NavLink>
               );
             })}
           </nav>
         </div>
 
-        {/* Bottom Role Info Footer */}
-        <div className="p-3 border-t border-slate-800 bg-slate-950/40 shrink-0">
-          <div className="bg-slate-800/80 rounded-xl p-2.5 border border-slate-700/60 text-xs">
-            <div className="flex items-center gap-1.5 font-semibold text-slate-200 text-[11px]">
-              <ShieldAlert className="w-3.5 h-3.5 text-indigo-400" />
-              <span>Role:</span>
-              <span className="capitalize text-indigo-300 font-bold">{role}</span>
+        {/* User Role Card */}
+        <div className="p-3.5 border-t border-[#2C2C29] bg-[#121212] shrink-0">
+          <div className="flex items-center justify-between text-xs text-white/80">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-accent" />
+              <span className="text-[11px] font-medium text-white/50 uppercase tracking-wider">Access:</span>
+              <span className="capitalize text-white font-bold text-xs">{role}</span>
             </div>
+            {role === 'student' && (
+              <span className="text-[10px] bg-white/10 text-white/70 px-1.5 py-0.5 rounded">
+                Portal
+              </span>
+            )}
           </div>
         </div>
       </aside>

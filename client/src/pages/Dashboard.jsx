@@ -14,15 +14,19 @@ import {
   Users,
   PlusCircle,
   ArrowRight,
-  Sparkles,
   TrendingUp,
-  CheckCircle2
+  CheckCircle2,
+  AlertCircle,
+  Clock,
+  Compass
 } from 'lucide-react';
 
 export default function Dashboard() {
   const { user, role } = useAuth();
   const [stats, setStats] = useState(null);
   const [upcomingEvents, setUpcomingEvents] = useState([]);
+  const [myClubs, setMyClubs] = useState([]);
+  const [selectedClubFilter, setSelectedClubFilter] = useState('ALL');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [registeringId, setRegisteringId] = useState(null);
@@ -37,29 +41,37 @@ export default function Dashboard() {
         api.get('/events?upcoming=true')
       ]);
 
-      if (statsRes.data.success) {
+      if (statsRes.data?.success) {
         setStats(statsRes.data.stats);
       }
 
-      if (eventsRes.data.success) {
-        setUpcomingEvents(eventsRes.data.events);
+      if (eventsRes.data?.success) {
+        setUpcomingEvents(eventsRes.data.events || []);
       }
 
-      // If student, also get their registration list to know which events they're already in
-      if (role === 'student') {
-        const myRegRes = await api.get('/registrations/my');
-        if (myRegRes.data.success) {
+      // If organizer or faculty, fetch their authorized/supervised clubs
+      if (role === 'organizer' || role === 'faculty') {
+        const clubsRes = await api.get('/clubs/my-authorized').catch(() => ({ data: {} }));
+        if (clubsRes.data?.success && Array.isArray(clubsRes.data.clubs)) {
+          setMyClubs(clubsRes.data.clubs);
+        }
+      }
+
+      // If student or organizer, get their registration list to know which events they're already in
+      if (role === 'student' || role === 'organizer' || role === 'faculty') {
+        const myRegRes = await api.get('/registrations/my').catch(() => ({ data: {} }));
+        if (myRegRes.data?.success && Array.isArray(myRegRes.data.registrations)) {
           const registeredIds = new Set(
             myRegRes.data.registrations
               .filter((r) => r.registrationStatus !== 'cancelled')
-              .map((r) => r.event?._id)
+              .map((r) => (r.event?._id || r.event)?.toString())
           );
           setRegisteredEventIds(registeredIds);
         }
       }
     } catch (err) {
       console.error('Failed to load dashboard:', err);
-      setError(err.response?.data?.message || 'Failed to load dashboard data.');
+      setError(err.response?.data?.message || 'Failed to load dashboard metrics.');
     } finally {
       setLoading(false);
     }
@@ -75,145 +87,368 @@ export default function Dashboard() {
       setActionSuccess('');
       setError('');
       const res = await api.post('/registrations', { eventId });
-      if (res.data.success) {
-        setActionSuccess(`Registered successfully! Ticket #${res.data.registration.ticketNumber}`);
+      if (res.data?.success) {
+        setActionSuccess(`Registration confirmed! Ticket #${res.data.registration.ticketNumber}`);
         setRegisteredEventIds((prev) => new Set([...prev, eventId]));
         fetchDashboardData();
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to register.');
+      setError(err.response?.data?.message || 'Failed to complete registration.');
     } finally {
       setRegisteringId(null);
     }
   };
 
-  if (loading) return <LoadingSpinner message="Loading FestFlow Dashboard..." />;
+  const displayedEvents = React.useMemo(() => {
+    if (role === 'organizer') {
+      const myClubIdSet = new Set(myClubs.map((c) => c._id.toString()));
+      return upcomingEvents.filter((ev) => {
+        const evClubId = (ev.club?._id || ev.club)?.toString();
+        if (selectedClubFilter !== 'ALL') {
+          return evClubId === selectedClubFilter;
+        }
+        return myClubIdSet.has(evClubId);
+      });
+    }
+    if (role === 'faculty') {
+      const supervisedIdSet = new Set(myClubs.map((c) => c._id.toString()));
+      return upcomingEvents.filter((ev) => {
+        const evClubId = (ev.club?._id || ev.club)?.toString();
+        if (selectedClubFilter !== 'ALL') {
+          return evClubId === selectedClubFilter;
+        }
+        return supervisedIdSet.has(evClubId);
+      });
+    }
+    return upcomingEvents;
+  }, [upcomingEvents, role, myClubs, selectedClubFilter]);
+
+  if (loading) {
+    return <LoadingSpinner message="Assembling campus pulse & schedules..." />;
+  }
 
   return (
-    <div className="space-y-8 animate-fade-in">
-      {/* Welcome Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-700 via-indigo-600 to-violet-700 text-white p-6 sm:p-8 shadow-lg shadow-indigo-500/10">
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 text-indigo-200 text-xs font-semibold uppercase tracking-wider mb-1">
-              <Sparkles className="w-3.5 h-3.5" /> Welcome Back
+    <div className="space-y-8 animate-fadeIn">
+      {/* Editorial Masthead Banner */}
+      <div className="bg-surface-primary border border-surface-border rounded-xl p-6 sm:p-8 shadow-subtle relative overflow-hidden">
+        {/* Left Accent Bar */}
+        <div className="absolute top-0 left-0 w-1.5 h-full bg-brand-accent" />
+
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pl-2">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-2xs uppercase tracking-widest text-brand-accent font-semibold">
+                Campus Portal • Active Term
+              </span>
+              <span className="text-surface-border">•</span>
+              <span className="text-2xs font-mono text-ink-muted">
+                {role === 'admin'
+                  ? 'Administrative Overseer'
+                  : role === 'faculty'
+                  ? 'Faculty Advisor Console'
+                  : role === 'organizer'
+                  ? 'Club Organizer Console'
+                  : 'Student Pass'}
+              </span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-              Hello, {user?.name || 'FestFlow Explorer'}! 👋
+
+            <h1 className="font-display font-bold text-3xl sm:text-4xl text-ink-primary tracking-tight">
+              Welcome back, {user?.name?.split(' ')[0] || 'Scholar'}.
             </h1>
-            <p className="text-sm text-indigo-100 mt-1.5 max-w-xl">
+
+            <p className="text-sm text-ink-muted max-w-2xl leading-relaxed">
               {role === 'student'
-                ? 'Discover upcoming campus hackathons, cultural fests, workshops, and manage your tickets.'
-                : 'Manage college events, coordinate club schedules, and track student participant registrations.'}
+                ? 'Discover upcoming campus hackathons, technical symposiums, and cultural festivals. Reserve your admission passes directly.'
+                : role === 'faculty'
+                ? 'Supervise club activities, review student membership, and assign organizer leadership across your designated campus clubs.'
+                : 'Coordinate college festival operations, monitor student admissions, and manage events for your chartered student societies.'}
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
-            {role === 'student' ? (
-              <Link
-                to="/my-registrations"
-                className="px-4 py-2.5 bg-white text-indigo-700 text-sm font-bold rounded-xl shadow-sm hover:bg-indigo-50 transition-colors flex items-center gap-2"
-              >
-                <Ticket className="w-4 h-4" /> My Event Passes
-              </Link>
-            ) : (
-              <Link
-                to="/events/create"
-                className="px-4 py-2.5 bg-white text-indigo-700 text-sm font-bold rounded-xl shadow-sm hover:bg-indigo-50 transition-colors flex items-center gap-2"
-              >
-                <PlusCircle className="w-4 h-4" /> Host New Event
+          <div className="flex items-center gap-3 shrink-0 flex-wrap">
+            {role === 'faculty' && (
+              <Link to="/faculty/organizers" className="btn-accent text-xs px-3.5 py-2.5 inline-flex items-center gap-2">
+                <Users className="w-4 h-4" />
+                <span>Organizer Assignments</span>
               </Link>
             )}
+            {role === 'admin' && (
+              <Link to="/admin/faculty" className="btn-secondary text-xs px-3.5 py-2.5 inline-flex items-center gap-2">
+                <Users className="w-4 h-4" />
+                <span>Manage Faculty</span>
+              </Link>
+            )}
+            {role === 'organizer' && (
+              <Link to="/my-registrations" className="btn-secondary text-xs px-3.5 py-2.5 inline-flex items-center gap-2">
+                <Ticket className="w-4 h-4" />
+                <span>My Event Passes</span>
+              </Link>
+            )}
+            {(role === 'admin' || role === 'organizer') && (
+              <Link to="/events/create" className="btn-accent text-xs px-4 py-2.5 inline-flex items-center gap-2">
+                <PlusCircle className="w-4 h-4" />
+                <span>Host New Event</span>
+              </Link>
+            )}
+            {role === 'student' && (
+              <Link to="/my-registrations" className="btn-accent text-xs px-4 py-2.5 inline-flex items-center gap-2">
+                <Ticket className="w-4 h-4" />
+                <span>My Event Passes</span>
+              </Link>
+            )}
+
+            <Link to="/events" className="btn-secondary text-xs px-4 py-2.5 inline-flex items-center gap-2">
+              <Compass className="w-4 h-4" />
+              <span>Browse Calendar</span>
+            </Link>
           </div>
         </div>
-
-        {/* Ambient background circles */}
-        <div className="absolute right-0 top-0 -mt-10 -mr-10 w-64 h-64 bg-white/10 rounded-full blur-2xl pointer-events-none" />
       </div>
 
+      {/* Prominent My Clubs Section for Organizers and Faculty */}
+      {(role === 'organizer' || role === 'faculty') && (
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 pb-2 border-b border-surface-border">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="font-mono text-2xs uppercase tracking-widest text-brand-accent font-semibold">
+                  {role === 'faculty' ? 'Faculty Jurisdiction' : 'Chartered Societies'}
+                </span>
+                <span className="text-surface-border">•</span>
+                <span className="text-2xs font-mono text-ink-muted">
+                  {role === 'faculty' ? 'Supervised Clubs' : 'Active Appointments'}
+                </span>
+              </div>
+              <h2 className="font-display font-bold text-2xl text-ink-primary">
+                My Clubs
+              </h2>
+            </div>
+
+            {/* Club Selector / Filter if multiple clubs */}
+            {myClubs.length > 1 && (
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold text-ink-secondary">Focus Club:</span>
+                <select
+                  value={selectedClubFilter}
+                  onChange={(e) => setSelectedClubFilter(e.target.value)}
+                  className="px-3 py-1.5 text-xs font-medium bg-surface-primary border border-surface-border rounded-lg shadow-subtle focus:outline-none focus:border-brand-accent cursor-pointer"
+                >
+                  <option value="ALL">All My Clubs ({myClubs.length})</option>
+                  {myClubs.map((c) => (
+                    <option key={c._id} value={c._id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
+
+          {myClubs.length === 0 ? (
+            <div className="bg-surface-primary rounded-xl border border-dashed border-amber-300 bg-amber-50/40 p-8 text-center max-w-xl mx-auto my-4">
+              <Building2 className="w-10 h-10 text-amber-600/70 mx-auto mb-3" />
+              <h3 className="font-display font-bold text-base text-amber-900">No Club Assignments</h3>
+              <p className="text-xs text-amber-800 mt-1.5 leading-relaxed">
+                {role === 'organizer'
+                  ? 'You are not currently assigned as an organizer to any club. Please contact your faculty coordinator.'
+                  : 'You are not currently designated as the faculty coordinator for any registered clubs. Please contact a campus administrator.'}
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {myClubs
+                .filter((c) => selectedClubFilter === 'ALL' || c._id === selectedClubFilter)
+                .map((club) => {
+                  return (
+                    <div
+                      key={club._id}
+                      className="bg-surface-primary border border-surface-border rounded-xl p-5 shadow-subtle hover:border-brand-accent/50 transition-all flex flex-col justify-between"
+                    >
+                      <div>
+                        <div className="flex items-start justify-between gap-3 mb-2">
+                          <span className="w-10 h-10 rounded-lg bg-surface-secondary border border-surface-border flex items-center justify-center text-brand-accent font-display font-bold text-base shrink-0">
+                            {club.name?.charAt(0) || 'C'}
+                          </span>
+                          <Badge variant={club.category || 'Technical'}>{club.category || 'Club'}</Badge>
+                        </div>
+
+                        <h3 className="font-display font-bold text-base text-ink-primary line-clamp-1">
+                          {club.name}
+                        </h3>
+
+                        <p className="text-xs text-ink-muted line-clamp-2 mt-1 leading-relaxed">
+                          {club.description || 'Active campus student society.'}
+                        </p>
+
+                        <div className="mt-4 pt-3 border-t border-surface-border/60 text-2xs space-y-1.5 text-ink-secondary">
+                          <div className="flex items-center justify-between">
+                            <span className="text-ink-muted">Faculty Coordinator:</span>
+                            <span className="font-semibold text-ink-primary truncate max-w-[150px]">
+                              {club.facultyCoordinator?.name || 'Unassigned'}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-ink-muted">Active Organizers:</span>
+                            <span className="font-mono font-bold text-ink-primary">
+                              {club.organizersCount ?? club.organizers?.length ?? 0}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-ink-muted">Upcoming Events:</span>
+                            <span className="font-mono font-bold text-brand-accent">
+                              {club.upcomingEventsCount ?? 0}
+                            </span>
+                          </div>
+                          {role === 'faculty' && (
+                            <div className="flex items-center justify-between">
+                              <span className="text-ink-muted">Enrolled Members:</span>
+                              <span className="font-mono font-bold text-ink-primary">
+                                {club.membersCount ?? 0}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="mt-4 pt-3 border-t border-surface-border flex items-center gap-2">
+                        <Link
+                          to={`/manage/club/${club._id}`}
+                          className="btn-accent text-xs px-3 py-1.5 w-full flex items-center justify-center gap-1.5"
+                        >
+                          <Building2 className="w-3.5 h-3.5" />
+                          <span>{role === 'faculty' ? 'Manage Club' : 'Open Club Console'}</span>
+                        </Link>
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Notifications / Alerts */}
       {actionSuccess && (
-        <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-sm flex items-center gap-2 shadow-sm">
-          <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+        <div className="p-4 bg-emerald-50 border border-emerald-200 text-status-success rounded-lg text-xs font-medium flex items-center gap-2.5 shadow-subtle">
+          <CheckCircle2 className="w-4 h-4 shrink-0" />
           <span>{actionSuccess}</span>
         </div>
       )}
 
       {error && (
-        <div className="p-4 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-sm shadow-sm">
-          {error}
+        <div className="p-4 bg-rose-50 border border-rose-200 text-status-error rounded-lg text-xs font-medium flex items-center gap-2.5 shadow-subtle">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          <span>{error}</span>
         </div>
       )}
 
-      {/* Metrics Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+      {/* Primary Metrics Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
-          title="Total Events"
+          title="All Scheduled Events"
           value={stats?.totalEvents ?? 0}
-          subtitle={`${stats?.upcomingEventsCount ?? 0} currently active / upcoming`}
+          subtitle={`${stats?.upcomingEventsCount ?? 0} active / upcoming`}
           icon={Calendar}
-          color="indigo"
         />
         <StatCard
           title="Campus Clubs"
           value={stats?.totalClubs ?? 0}
-          subtitle="Technical, cultural & sports"
+          subtitle="Registered student societies"
           icon={Building2}
-          color="emerald"
         />
         <StatCard
-          title="Venues & Auditoriums"
+          title="Campus Venues"
           value={stats?.totalVenues ?? 0}
-          subtitle="Halls, labs & open grounds"
+          subtitle="Auditoriums & lab facilities"
           icon={MapPin}
-          color="amber"
         />
         {role === 'student' ? (
           <StatCard
-            title="My Registrations"
+            title="My Confirmed Passes"
             value={stats?.userStats?.myActiveRegistrations ?? 0}
-            subtitle="Confirmed event entries"
+            subtitle="Valid entry reservations"
             icon={Ticket}
-            color="rose"
+          />
+        ) : role === 'organizer' ? (
+          <StatCard
+            title="My Club Events"
+            value={stats?.userStats?.myEventsCount ?? displayedEvents.length}
+            subtitle={`Across ${stats?.userStats?.myClubsCount ?? myClubs.length} authorized club(s)`}
+            icon={Calendar}
+          />
+        ) : role === 'faculty' ? (
+          <StatCard
+            title="Supervised Clubs"
+            value={stats?.userStats?.myClubsCount ?? myClubs.length}
+            subtitle={`Advising ${stats?.userStats?.myOrganizersCount ?? 0} organizers`}
+            icon={Building2}
           />
         ) : (
           <StatCard
             title="Total Registrations"
             value={stats?.totalRegistrations ?? 0}
-            subtitle={`Across ${stats?.totalStudents ?? 0} students`}
+            subtitle={`Enrolled across ${stats?.totalStudents ?? 0} students`}
             icon={Users}
-            color="purple"
           />
         )}
       </div>
 
       {/* Featured Upcoming Events */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex items-end justify-between pb-2 border-b border-surface-border">
           <div>
-            <h2 className="text-xl font-bold text-slate-900">Upcoming Events</h2>
-            <p className="text-xs text-slate-500">Live campus activities open for registration</p>
+            <h2 className="font-display font-bold text-2xl text-ink-primary">
+              {role === 'organizer'
+                ? selectedClubFilter === 'ALL'
+                  ? 'My Clubs Scheduled Events'
+                  : `${myClubs.find((c) => c._id === selectedClubFilter)?.name || 'Club'} Events`
+                : role === 'faculty'
+                ? selectedClubFilter === 'ALL'
+                  ? 'Supervised Club Events'
+                  : `${myClubs.find((c) => c._id === selectedClubFilter)?.name || 'Club'} Events`
+                : 'Upcoming Campus Events'}
+            </h2>
+            <p className="text-xs text-ink-muted mt-0.5">
+              {role === 'organizer'
+                ? 'Festivals, hackathons, and workshops scheduled for your authorized student societies'
+                : role === 'faculty'
+                ? 'Events scheduled by student societies under your faculty supervision'
+                : 'Live festivals, hackathons, and workshops currently open for attendee enrollment'}
+            </p>
           </div>
           <Link
-            to="/events"
-            className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 flex items-center gap-1"
+            to={role === 'organizer' ? '/events?filter=my-clubs' : '/events'}
+            className="text-xs font-semibold text-brand-accent hover:text-brand-accent-hover inline-flex items-center gap-1 group"
           >
-            Explore All ({upcomingEvents.length}) <ArrowRight className="w-3.5 h-3.5" />
+            <span>Explore All ({displayedEvents.length})</span>
+            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
           </Link>
         </div>
 
-        {upcomingEvents.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-dashed border-slate-300 p-8 text-center">
-            <Calendar className="w-10 h-10 text-slate-300 mx-auto mb-2" />
-            <h3 className="text-sm font-semibold text-slate-700">No upcoming events found</h3>
-            <p className="text-xs text-slate-500 mt-1">Check back soon or create the first event!</p>
+        {displayedEvents.length === 0 ? (
+          <div className="bg-surface-primary rounded-xl border border-dashed border-surface-border p-12 text-center">
+            <Calendar className="w-10 h-10 text-ink-muted/50 mx-auto mb-3" />
+            <h3 className="font-display font-bold text-base text-ink-primary">No Scheduled Events</h3>
+            <p className="text-xs text-ink-muted mt-1 max-w-sm mx-auto">
+              {role === 'organizer'
+                ? 'No upcoming events are currently scheduled for your authorized club(s). Host your first festival!'
+                : role === 'faculty'
+                ? 'No upcoming events are currently scheduled by your supervised clubs.'
+                : 'There are currently no upcoming events on the university roster. Check back soon!'}
+            </p>
+            {role !== 'student' && role !== 'faculty' && myClubs.length > 0 && (
+              <Link to="/events/create" className="btn-accent text-xs px-4 py-2 mt-4 inline-flex items-center gap-1.5">
+                <PlusCircle className="w-3.5 h-3.5" /> Create First Event
+              </Link>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {upcomingEvents.slice(0, 3).map((event) => (
+            {displayedEvents.slice(0, 6).map((event) => (
               <EventCard
                 key={event._id}
                 event={event}
-                onQuickRegister={role === 'student' ? handleQuickRegister : null}
+                onQuickRegister={['student', 'organizer', 'faculty'].includes(role) ? handleQuickRegister : null}
                 isRegistering={registeringId === event._id}
                 isUserRegistered={registeredEventIds.has(event._id)}
               />
@@ -222,34 +457,41 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* Extra Section: Recent registrations / quick overview */}
+      {/* Recent Activity / Registrations Feed */}
       {stats?.recentRegistrations && stats.recentRegistrations.length > 0 && (
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-indigo-600" />
-              <h3 className="text-base font-bold text-slate-900">Recent Registrations Activity</h3>
+        <div className="bg-surface-primary rounded-xl border border-surface-border p-6 shadow-subtle">
+          <div className="flex items-center justify-between mb-4 pb-3 border-b border-surface-border">
+            <div className="flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded-lg bg-surface-secondary text-brand-accent flex items-center justify-center">
+                <TrendingUp className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="font-display font-bold text-base text-ink-primary">Recent Registrations Roster</h3>
+                <p className="text-2xs text-ink-muted">Live event passes issued across departments</p>
+              </div>
             </div>
-            <span className="text-xs text-slate-400 font-medium">Realtime database feed</span>
+            <span className="font-mono text-2xs uppercase tracking-wider text-ink-muted bg-surface-secondary px-2 py-0.5 rounded border border-surface-border">
+              Live Feed
+            </span>
           </div>
 
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-surface-border">
             {stats.recentRegistrations.map((reg) => (
               <div key={reg._id} className="py-3 flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center font-bold text-xs">
+                  <div className="w-8 h-8 rounded-full bg-surface-secondary border border-surface-border text-ink-primary flex items-center justify-center font-bold text-xs">
                     {reg.user?.name ? reg.user.name.charAt(0).toUpperCase() : 'S'}
                   </div>
                   <div>
-                    <p className="text-xs font-semibold text-slate-800">{reg.user?.name || 'Participant'}</p>
-                    <p className="text-[11px] text-slate-500">{reg.user?.department || 'Student'}</p>
+                    <p className="text-xs font-semibold text-ink-primary">{reg.user?.name || 'Participant'}</p>
+                    <p className="text-2xs text-ink-muted">{reg.user?.department || 'Department Not Specified'}</p>
                   </div>
                 </div>
 
                 <div className="text-right">
-                  <p className="text-xs font-medium text-slate-700 truncate max-w-xs">{reg.event?.title}</p>
-                  <span className="text-[10px] text-slate-400">
-                    {new Date(reg.createdAt).toLocaleDateString()}
+                  <p className="text-xs font-medium text-ink-primary truncate max-w-xs">{reg.event?.title || 'Event'}</p>
+                  <span className="text-2xs font-mono text-ink-muted">
+                    {new Date(reg.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                   </span>
                 </div>
               </div>
