@@ -33,3 +33,12 @@ build/
 *.sw?
 .DS_Store
 Thumbs.db
+
+# Python & Virtual Environments
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+*.db
+*.sqlite3
