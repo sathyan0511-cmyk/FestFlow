@@ -67,7 +67,6 @@ export default function Volunteering() {
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto animate-fadeIn">
-      {/* Editorial Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-surface-border">
         <div>
           <div className="flex items-center gap-2 mb-2">
@@ -101,7 +100,6 @@ export default function Volunteering() {
         </div>
       )}
 
-      {/* My Volunteering Assignments */}
       <div className="space-y-4">
         <h3 className="font-mono text-2xs uppercase tracking-widest text-ink-muted font-bold">
           My Active Deployments & Shifts ({volunteering.length})
@@ -149,7 +147,6 @@ export default function Volunteering() {
         )}
       </div>
 
-      {/* Apply Modal */}
       <Modal isOpen={isApplyModalOpen} onClose={() => setIsApplyModalOpen(false)} title="Volunteer Deployment Application">
         <form onSubmit={handleApply} className="space-y-4">
           <div>

@@ -83,7 +83,6 @@ export default function Venues() {
 
   return (
     <div className="space-y-6 animate-fadeIn">
-      {/* Editorial Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-surface-border">
         <div>
           <div className="flex items-center gap-2 mb-2">
@@ -144,7 +143,6 @@ export default function Venues() {
                   <span>{venue.location}</span>
                 </p>
 
-                {/* Facilities List */}
                 {venue.facilities && venue.facilities.length > 0 && (
                   <div className="mt-4 pt-3 border-t border-surface-border">
                     <p className="font-mono text-2xs uppercase tracking-wider font-semibold text-ink-muted mb-2">
@@ -177,7 +175,6 @@ export default function Venues() {
         </div>
       )}
 
-      {/* Create Venue Modal */}
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Register Campus Venue">
         <form onSubmit={handleCreateVenue} className="space-y-4">
           <div>

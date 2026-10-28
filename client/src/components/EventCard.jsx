@@ -52,7 +52,6 @@ export default function EventCard({ event, onQuickRegister, isRegistering = fals
   return (
     <article className="fest-card overflow-hidden flex flex-col justify-between group h-full">
       <div>
-        {/* Visual Banner Header */}
         <Link to={`/events/${event._id}`} className="block relative h-44 overflow-hidden bg-slate-900">
           {event.imageUrl ? (
             <img
@@ -81,7 +80,6 @@ export default function EventCard({ event, onQuickRegister, isRegistering = fals
                 </h4>
               </div>
 
-              {/* Decorative subtle grid overlay */}
               <div
                 className="absolute inset-0 opacity-10 pointer-events-none"
                 style={{
@@ -92,14 +90,12 @@ export default function EventCard({ event, onQuickRegister, isRegistering = fals
             </div>
           )}
 
-          {/* Date Stacking Badge */}
           <div className="absolute top-3 left-3 bg-surface-primary/95 backdrop-blur border border-edge rounded-md px-2.5 py-1 text-center shadow-fest-sm z-20">
             <span className="text-[10px] font-extrabold tracking-wider text-accent block leading-none">{monthStr}</span>
             <span className="text-base font-extrabold text-ink-primary block leading-tight">{dayStr}</span>
           </div>
         </Link>
 
-        {/* Card Body */}
         <div className="p-5">
           <div className="flex items-center gap-2 mb-2.5">
             <Badge variant={event.eventType}>{event.eventType}</Badge>
@@ -120,7 +116,6 @@ export default function EventCard({ event, onQuickRegister, isRegistering = fals
             {event.description}
           </p>
 
-          {/* Metadata Rows */}
           <div className="mt-4 pt-3 border-t border-edge-light space-y-1.5 text-xs text-ink-secondary">
             <div className="flex items-center gap-2">
               <MapPin className="w-3.5 h-3.5 text-ink-muted shrink-0" />
@@ -132,7 +127,6 @@ export default function EventCard({ event, onQuickRegister, isRegistering = fals
             </div>
           </div>
 
-          {/* Capacity Indicator */}
           <div className="mt-4 pt-3 border-t border-edge-light">
             <div className="flex items-center justify-between text-[11px] font-medium mb-1.5">
               <span className="text-ink-muted">Seats reserved</span>
@@ -156,7 +150,6 @@ export default function EventCard({ event, onQuickRegister, isRegistering = fals
         </div>
       </div>
 
-      {/* Footer Actions */}
       <div className="px-5 py-3.5 bg-canvas-warm/70 border-t border-edge flex items-center justify-between gap-3">
         <Link
           to={`/events/${event._id}`}

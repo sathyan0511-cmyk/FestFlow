@@ -148,9 +148,7 @@ const runFacultyAndClubTests = async () => {
       );
       const adminToken = adminLoginRes.data?.token;
 
-      // =========================================================================
       // Test 1: Seeded Faculty Login with evaluation credentials
-      // =========================================================================
       const facultyLoginRes = await request(
         {
           hostname: 'localhost',
@@ -167,9 +165,7 @@ const runFacultyAndClubTests = async () => {
       );
       const seededFacultyToken = facultyLoginRes.data?.token;
 
-      // =========================================================================
       // Test 2: Invalid Faculty credentials rejected
-      // =========================================================================
       const badFacultyLogin = await request(
         {
           hostname: 'localhost',
@@ -185,9 +181,7 @@ const runFacultyAndClubTests = async () => {
         '2. Invalid faculty credentials rejected -> Status 401'
       );
 
-      // =========================================================================
       // Test 3: Test Faculty Login
-      // =========================================================================
       const testFacultyLogin = await request(
         {
           hostname: 'localhost',
@@ -204,9 +198,7 @@ const runFacultyAndClubTests = async () => {
         '3. Test faculty logs in and receives supervised clubs array in user session'
       );
 
-      // =========================================================================
       // Test 4: Faculty retrieves their assigned clubs via /api/clubs/my-authorized
-      // =========================================================================
       const facultyClubsRes = await request({
         hostname: 'localhost',
         port: PORT,
@@ -222,9 +214,7 @@ const runFacultyAndClubTests = async () => {
         '4. Faculty sees only their assigned clubs (Club A included, Club B excluded)'
       );
 
-      // =========================================================================
       // Test 5: Student cannot access faculty organizer management endpoints
-      // =========================================================================
       const studentLoginRes = await request(
         {
           hostname: 'localhost',
@@ -255,9 +245,7 @@ const runFacultyAndClubTests = async () => {
         '5. Student cannot access organizer assignment endpoint -> Forbidden 403'
       );
 
-      // =========================================================================
       // Test 6: Faculty cannot promote a student in a club they do not supervise
-      // =========================================================================
       const facultyUnsupervisedAssign = await request(
         {
           hostname: 'localhost',
@@ -276,9 +264,7 @@ const runFacultyAndClubTests = async () => {
         '6. Faculty cannot assign organizer in unsupervised club (Club B) -> Forbidden 403'
       );
 
-      // =========================================================================
       // Test 7: Faculty assigns student as organizer for their supervised club
-      // =========================================================================
       const facultyAssignRes = await request(
         {
           hostname: 'localhost',
@@ -297,7 +283,6 @@ const runFacultyAndClubTests = async () => {
         '7. Faculty assigns student as organizer for supervised club (Club A) -> Status 200'
       );
 
-      // Verify the student received organizer permissions for Club A
       const refreshedStudent = await User.findById(testStudent._id);
       assert(
         refreshedStudent.role === 'organizer' &&
@@ -305,9 +290,7 @@ const runFacultyAndClubTests = async () => {
         '7b. Student role promoted to organizer and Club A added to user.clubs'
       );
 
-      // =========================================================================
       // Test 8: New Organizer can create event for Club A
-      // =========================================================================
       const newOrganizerEventRes = await request(
         {
           hostname: 'localhost',
@@ -342,9 +325,7 @@ const runFacultyAndClubTests = async () => {
       const createdEventId = newOrganizerEventRes.data?.event?._id;
       if (createdEventId) createdEventIds.push(createdEventId);
 
-      // =========================================================================
       // Test 9: New Organizer CANNOT create event for unrelated club (Club B)
-      // =========================================================================
       const newOrganizerUnrelatedEventRes = await request(
         {
           hostname: 'localhost',
@@ -377,9 +358,7 @@ const runFacultyAndClubTests = async () => {
         '9. New organizer blocked from creating event for unrelated club (Club B) -> Forbidden 403'
       );
 
-      // =========================================================================
       // Test 10: Multi-club organizer assignment (Assign student to Club C too)
-      // =========================================================================
       const assignClubC = await request(
         {
           hostname: 'localhost',
@@ -398,7 +377,6 @@ const runFacultyAndClubTests = async () => {
         '10. Faculty assigns organizer to a second club (Club C) -> Allowed 200'
       );
 
-      // Verify student's authorized clubs list contains both Club A and Club C
       const organizerClubsRes = await request({
         hostname: 'localhost',
         port: PORT,
@@ -412,9 +390,7 @@ const runFacultyAndClubTests = async () => {
         '10b. Organizer belongs to multiple clubs and sees both Club A and Club C in My Clubs'
       );
 
-      // =========================================================================
       // Test 11: Revoking organizer permissions from Club A preserves Club C
-      // =========================================================================
       const revokeClubARes = await request({
         hostname: 'localhost',
         port: PORT,
@@ -427,7 +403,6 @@ const runFacultyAndClubTests = async () => {
         '11. Faculty revokes organizer status for Club A -> Allowed 200'
       );
 
-      // Verify permissions in Club C are preserved
       const userAfterFirstRevoke = await User.findById(testStudent._id);
       const remainingClubsRes = await request({
         hostname: 'localhost',
@@ -444,9 +419,7 @@ const runFacultyAndClubTests = async () => {
         '11b. Organizer retains role and permissions for Club C after Club A revocation'
       );
 
-      // =========================================================================
       // Test 12: Revoked Club A permissions are enforced on the backend immediately
-      // =========================================================================
       const attemptCreateClubAAfterRevoke = await request(
         {
           hostname: 'localhost',
@@ -476,9 +449,7 @@ const runFacultyAndClubTests = async () => {
         '12. Direct API request to create event in revoked club rejected immediately -> Forbidden 403'
       );
 
-      // =========================================================================
       // Test 13: Revoking the last club safely resets role to 'student'
-      // =========================================================================
       const revokeClubCRes = await request({
         hostname: 'localhost',
         port: PORT,
@@ -497,9 +468,7 @@ const runFacultyAndClubTests = async () => {
         '13b. User role safely reverted from organizer to student with zero data loss'
       );
 
-      // =========================================================================
       // Test 14: Historical student registration records remain intact
-      // =========================================================================
       const testRegistration = await Registration.create({
         event: createdEventId || testClubA._id,
         user: testStudent._id,
@@ -521,9 +490,7 @@ const runFacultyAndClubTests = async () => {
         '14. Student event passes and historical registration records completely intact'
       );
 
-      // =========================================================================
       // Test 15: Admin provisions new Faculty account
-      // =========================================================================
       const newFacultyEmail = `admin.prov.faculty.${Date.now()}@festflow.edu`;
       const adminCreateFaculty = await request(
         {
@@ -552,9 +519,7 @@ const runFacultyAndClubTests = async () => {
         createdUserIds.push(adminCreateFaculty.data.faculty._id);
       }
 
-      // =========================================================================
       // Test 16: Newly provisioned faculty logs in and sees Club B
-      // =========================================================================
       const newFacultyLogin = await request(
         {
           hostname: 'localhost',
@@ -580,9 +545,7 @@ const runFacultyAndClubTests = async () => {
         '16. Newly provisioned faculty logs in and sees only their assigned Club B'
       );
 
-      // =========================================================================
       // Test 17: Unauthenticated request rejected
-      // =========================================================================
       const unauthReq = await request({
         hostname: 'localhost',
         port: PORT,
@@ -594,9 +557,7 @@ const runFacultyAndClubTests = async () => {
         '17. Unauthenticated request to faculty API rejected -> 401 Unauthorized'
       );
 
-      // =========================================================================
       // Test 18: Admin operations preserved
-      // =========================================================================
       const adminClubsList = await request({
         hostname: 'localhost',
         port: PORT,

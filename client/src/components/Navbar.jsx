@@ -16,7 +16,6 @@ export default function Navbar({ onToggleSidebar }) {
   return (
     <header className="sticky top-0 z-30 bg-surface-primary/95 backdrop-blur border-b border-edge px-4 sm:px-6 py-3">
       <div className="flex items-center justify-between">
-        {/* Left mobile menu toggle & season indicator */}
         <div className="flex items-center gap-3">
           <button
             onClick={onToggleSidebar}
@@ -34,11 +33,9 @@ export default function Navbar({ onToggleSidebar }) {
           </div>
         </div>
 
-        {/* Right side authentication & profile */}
         <div className="flex items-center gap-3 sm:gap-4">
           {isAuthenticated ? (
             <>
-              {/* User Identity Pill */}
               <div className="flex items-center gap-3 pl-2 sm:border-l sm:border-edge">
                 <div className="w-8 h-8 rounded-full bg-ink-primary text-white flex items-center justify-center font-bold text-xs shadow-fest-sm">
                   {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
@@ -52,7 +49,6 @@ export default function Navbar({ onToggleSidebar }) {
                 </div>
               </div>
 
-              {/* Logout button */}
               <button
                 onClick={handleLogout}
                 title="Log Out of FestFlow"

@@ -138,7 +138,6 @@ export default function Clubs() {
 
   return (
     <div className="space-y-6 animate-fadeIn">
-      {/* Editorial Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-surface-border">
         <div>
           <div className="flex items-center gap-2 mb-2">
@@ -301,7 +300,6 @@ export default function Clubs() {
         </div>
       )}
 
-      {/* Create Club Modal */}
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Charter a Campus Club">
         <form onSubmit={handleCreateClub} className="space-y-4">
           <div>

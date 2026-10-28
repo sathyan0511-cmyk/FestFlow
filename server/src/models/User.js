@@ -35,7 +35,7 @@ const userSchema = new mongoose.Schema(
       enum: ['admin', 'organizer', 'student', 'faculty'],
       default: 'student'
     },
-    // Multi-club organizer associations (backward-compatible)
+    // Assigned clubs for organizers and faculty
     clubs: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -47,7 +47,6 @@ const userSchema = new mongoose.Schema(
       enum: ['student', 'external'],
       default: 'student'
     },
-    // Student specifics (aligned with STUDENT relational schema)
     registerNumber: {
       type: String,
       trim: true
@@ -69,7 +68,6 @@ const userSchema = new mongoose.Schema(
       type: String,
       trim: true
     },
-    // External participant specifics (aligned with EXTERNAL_PARTICIPANT relational schema)
     collegeName: {
       type: String,
       trim: true

@@ -29,7 +29,6 @@ const getClubs = async (req, res, next) => {
       .populate('organizers', 'name email department phone')
       .sort({ createdAt: -1 });
 
-    // Include event counts for each club
     const clubIds = clubs.map((c) => c._id);
     const eventCounts = await Event.aggregate([
       { $match: { club: { $in: clubIds } } },
@@ -73,7 +72,6 @@ const getClubById = async (req, res, next) => {
       });
     }
 
-    // Get events for this club
     const now = new Date();
     const events = await Event.find({ club: club._id })
       .populate('venue', 'name location capacity')
@@ -216,7 +214,7 @@ const deleteClub = async (req, res, next) => {
       });
     }
 
-    // Check if any events are linked to this club
+    // Prevent deleting a club that has events
     const eventsCount = await Event.countDocuments({ club: club._id });
     if (eventsCount > 0) {
       return res.status(400).json({
@@ -341,26 +339,23 @@ const assignClubOrganizer = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Cannot assign a deactivated student.' });
     }
 
-    // Add to Club.organizers if not already present
     const alreadyOrganizer = club.organizers.some((o) => o.toString() === student._id.toString());
     if (!alreadyOrganizer) {
       club.organizers.push(student._id);
       await club.save();
     }
 
-    // Add to student.clubs
     if (!student.clubs) student.clubs = [];
     if (!student.clubs.some((c) => c.toString() === club._id.toString())) {
       student.clubs.push(club._id);
     }
 
-    // Promote to organizer if student
+    // Promote student to organizer role if needed
     if (student.role === 'student') {
       student.role = 'organizer';
     }
     await student.save();
 
-    // Ensure active ClubMembership with officer role
     await ClubMembership.findOneAndUpdate(
       { club: club._id, user: student._id },
       {
@@ -413,16 +408,13 @@ const revokeClubOrganizer = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Target user not found.' });
     }
 
-    // Remove from Club.organizers
     club.organizers = club.organizers.filter((o) => o.toString() !== studentId);
     await club.save();
 
-    // Remove from student.clubs
     if (student.clubs) {
       student.clubs = student.clubs.filter((c) => c.toString() !== clubId);
     }
 
-    // Check remaining clubs for this student
     const remainingOrganizedClubsCount = await Club.countDocuments({
       organizers: student._id
     });
@@ -434,7 +426,7 @@ const revokeClubOrganizer = async (req, res, next) => {
       role: { $in: ['coordinator', 'lead', 'treasurer', 'president', 'vice_president'] }
     });
 
-    // If no remaining organizer clubs, safely revert to student
+    // Revert role to student if user no longer organizes any clubs
     if (remainingOrganizedClubsCount === 0 && otherOfficerCount === 0 && (!student.clubs || student.clubs.length === 0)) {
       if (student.role === 'organizer') {
         student.role = 'student';
@@ -442,7 +434,6 @@ const revokeClubOrganizer = async (req, res, next) => {
     }
     await student.save();
 
-    // Update ClubMembership role for this club back to regular member
     await ClubMembership.findOneAndUpdate(
       { club: club._id, user: student._id },
       { role: 'member' }

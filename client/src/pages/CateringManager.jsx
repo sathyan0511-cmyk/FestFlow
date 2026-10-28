@@ -18,7 +18,6 @@ export default function CateringManager() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
-  // Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [form, setForm] = useState({
     catererName: '',
@@ -103,7 +102,6 @@ export default function CateringManager() {
 
   return (
     <div className="space-y-6 animate-fadeIn">
-      {/* Editorial Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-surface-border">
         <div>
           <div className="flex items-center gap-2 mb-2">
@@ -130,7 +128,6 @@ export default function CateringManager() {
         </button>
       </div>
 
-      {/* Event Selector & Cost summary */}
       <div className="bg-surface-primary rounded-xl border border-surface-border p-5 shadow-subtle flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <label htmlFor="catering-event-select" className="text-xs font-semibold text-ink-secondary whitespace-nowrap">
@@ -157,7 +154,6 @@ export default function CateringManager() {
         </div>
       </div>
 
-      {/* Orders List */}
       <div className="space-y-4">
         <h3 className="font-mono text-2xs uppercase tracking-widest text-ink-muted font-bold">
           Active Hospitality Contracts ({cateringOrders.length})
@@ -212,7 +208,6 @@ export default function CateringManager() {
         )}
       </div>
 
-      {/* Book Catering Modal */}
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Commission Catering Order">
         <form onSubmit={handleCreateCatering} className="space-y-4">
           <div>

@@ -25,7 +25,6 @@ export default function FacultyOrganizers() {
   const [error, setError] = useState('');
   const [actionSuccess, setActionSuccess] = useState('');
 
-  // Selected club for organizer assignment
   const [selectedClubId, setSelectedClubId] = useState('');
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [searchStudent, setSearchStudent] = useState('');
@@ -34,7 +33,6 @@ export default function FacultyOrganizers() {
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [assigning, setAssigning] = useState(false);
 
-  // Revocation
   const [revokeModalOpen, setRevokeModalOpen] = useState(false);
   const [targetClub, setTargetClub] = useState(null);
   const [studentToRevoke, setStudentToRevoke] = useState(null);
@@ -63,7 +61,7 @@ export default function FacultyOrganizers() {
     fetchSupervisedClubs();
   }, []);
 
-  // Candidate lookup for assignment modal
+  // Debounced lookup for eligible student candidates
   useEffect(() => {
     if (!isAssignModalOpen || !selectedClubId) return;
     const timer = setTimeout(async () => {
@@ -140,7 +138,6 @@ export default function FacultyOrganizers() {
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto animate-fadeIn">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-surface-border">
         <div>
           <div className="flex items-center gap-2 mb-2">
@@ -197,7 +194,6 @@ export default function FacultyOrganizers() {
         </div>
       ) : (
         <div className="space-y-6">
-          {/* Club Tab Selector */}
           <div className="flex items-center gap-2 border-b border-surface-border pb-3 overflow-x-auto">
             {clubs.map((c) => (
               <button
@@ -216,7 +212,6 @@ export default function FacultyOrganizers() {
             ))}
           </div>
 
-          {/* Active Club Organizers Panel */}
           {activeClub && (
             <div className="bg-surface-primary rounded-xl border border-surface-border p-6 shadow-subtle space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-surface-border">
@@ -290,7 +285,6 @@ export default function FacultyOrganizers() {
         </div>
       )}
 
-      {/* Assign Modal */}
       <Modal
         isOpen={isAssignModalOpen}
         onClose={() => {
@@ -334,7 +328,6 @@ export default function FacultyOrganizers() {
             </div>
           </div>
 
-          {/* Candidates List */}
           <div className="border border-surface-border rounded-lg max-h-56 overflow-y-auto divide-y divide-surface-border">
             {searchingCandidates ? (
               <div className="p-4 text-center text-ink-muted font-mono text-2xs">
@@ -425,7 +418,6 @@ export default function FacultyOrganizers() {
         </div>
       </Modal>
 
-      {/* Revoke Modal */}
       <Modal
         isOpen={revokeModalOpen}
         onClose={() => {

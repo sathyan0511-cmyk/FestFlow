@@ -39,14 +39,12 @@ export default function EventDetail() {
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('overview');
 
-  // Sub-data
   const [attendees, setAttendees] = useState([]);
   const [isRegistered, setIsRegistered] = useState(false);
   const [myRegistration, setMyRegistration] = useState(null);
   const [registering, setRegistering] = useState(false);
   const [actionMessage, setActionMessage] = useState('');
 
-  // Additional modules data
   const [competitions, setCompetitions] = useState([]);
   const [feedbacks, setFeedbacks] = useState([]);
   const [avgRating, setAvgRating] = useState(0);
@@ -55,16 +53,13 @@ export default function EventDetail() {
   const [volunteers, setVolunteers] = useState([]);
   const [payments, setPayments] = useState([]);
 
-  // Feedback form
   const [myRating, setMyRating] = useState(5);
   const [myComment, setMyComment] = useState('');
   const [feedbackSuccess, setFeedbackSuccess] = useState('');
   const [submittingFeedback, setSubmittingFeedback] = useState(false);
 
-  // Payment state
   const [paying, setPaying] = useState(false);
 
-  // Edit Event Modal state
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editFormData, setEditFormData] = useState({});
   const [editVenues, setEditVenues] = useState([]);
@@ -101,7 +96,6 @@ export default function EventDetail() {
         }
       }
 
-      // Check registration
       const regRes = await api.get('/registrations/my').catch(() => ({ data: {} }));
       if (regRes.data?.success && Array.isArray(regRes.data.registrations)) {
         const match = regRes.data.registrations.find(
@@ -116,7 +110,6 @@ export default function EventDetail() {
         }
       }
 
-      // Load sub-modules in parallel
       const [compRes, fbRes, sponRes, catRes, volRes] = await Promise.all([
         api.get(`/competitions/event/${id}`).catch(() => ({ data: {} })),
         api.get(`/feedback/event/${id}`).catch(() => ({ data: {} })),
@@ -323,7 +316,6 @@ export default function EventDetail() {
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto animate-fadeIn">
-      {/* Top Breadcrumb & Administrative Actions */}
       <div className="flex items-center justify-between">
         <Link
           to="/events"
@@ -357,7 +349,6 @@ export default function EventDetail() {
         </div>
       )}
 
-      {/* Main Masthead Card */}
       <div className="bg-surface-primary rounded-xl border border-surface-border p-6 sm:p-8 shadow-subtle">
         <div className="flex items-center gap-2 flex-wrap mb-3">
           <Badge variant={event.eventType}>{event.eventType}</Badge>
@@ -383,7 +374,6 @@ export default function EventDetail() {
           </div>
         )}
 
-        {/* Date, Time, Venue, Club Roster */}
         <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4 border-y border-surface-border py-4 text-xs">
           <div className="flex items-start gap-3">
             <div className="p-2 rounded-lg bg-surface-secondary text-brand-accent">
@@ -416,7 +406,6 @@ export default function EventDetail() {
           </div>
         </div>
 
-        {/* Admission & Reservation Action Bar */}
         <div className="mt-6 p-4 sm:p-5 bg-surface-secondary/60 rounded-xl border border-surface-border flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 text-xs font-semibold text-ink-primary">
@@ -469,7 +458,6 @@ export default function EventDetail() {
         </div>
       </div>
 
-      {/* Tabs Navigation */}
       <div className="flex items-center gap-1.5 overflow-x-auto border-b border-surface-border pb-2">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
@@ -489,7 +477,6 @@ export default function EventDetail() {
         })}
       </div>
 
-      {/* Tab 1: Overview */}
       {activeTab === 'overview' && (
         <div className="bg-surface-primary rounded-xl border border-surface-border p-6 sm:p-8 space-y-6 shadow-subtle">
           <div>
@@ -501,7 +488,6 @@ export default function EventDetail() {
             </p>
           </div>
 
-          {/* Venue Facilities */}
           {event.venue?.facilities && event.venue.facilities.length > 0 && (
             <div className="pt-6 border-t border-surface-border">
               <h4 className="font-mono text-2xs uppercase tracking-widest text-ink-muted mb-3 font-semibold">
@@ -522,7 +508,6 @@ export default function EventDetail() {
         </div>
       )}
 
-      {/* Tab 2: Competitions */}
       {activeTab === 'competitions' && (
         <div className="bg-surface-primary rounded-xl border border-surface-border p-6 shadow-subtle space-y-4">
           <div className="flex items-center justify-between pb-3 border-b border-surface-border">
@@ -549,10 +534,8 @@ export default function EventDetail() {
         </div>
       )}
 
-      {/* Tab 3: Feedback & Reviews */}
       {activeTab === 'feedback' && (
         <div className="space-y-6">
-          {/* Submit Review */}
           <div className="bg-surface-primary rounded-xl border border-surface-border p-6 shadow-subtle">
             <h3 className="font-display font-bold text-base text-ink-primary mb-3">Leave Attendee Review</h3>
 
@@ -598,7 +581,6 @@ export default function EventDetail() {
             </form>
           </div>
 
-          {/* Feedback List */}
           <div className="bg-surface-primary rounded-xl border border-surface-border p-6 shadow-subtle">
             <h3 className="font-display font-bold text-base text-ink-primary mb-4 pb-3 border-b border-surface-border">
               Attendee Reviews ({feedbacks.length})
@@ -624,7 +606,6 @@ export default function EventDetail() {
         </div>
       )}
 
-      {/* Tab 4: Sponsors */}
       {activeTab === 'sponsors' && (
         <div className="bg-surface-primary rounded-xl border border-surface-border p-6 shadow-subtle">
           <div className="flex items-center justify-between mb-4 pb-3 border-b border-surface-border">
@@ -653,7 +634,6 @@ export default function EventDetail() {
         </div>
       )}
 
-      {/* Tab 5: Catering */}
       {activeTab === 'catering' && (
         <div className="bg-surface-primary rounded-xl border border-surface-border p-6 shadow-subtle">
           <div className="flex items-center justify-between mb-4 pb-3 border-b border-surface-border">
@@ -687,7 +667,6 @@ export default function EventDetail() {
         </div>
       )}
 
-      {/* Tab 6: Volunteers */}
       {activeTab === 'volunteers' && (
         <div className="bg-surface-primary rounded-xl border border-surface-border p-6 shadow-subtle">
           <div className="flex items-center justify-between mb-4 pb-3 border-b border-surface-border">
@@ -716,7 +695,6 @@ export default function EventDetail() {
         </div>
       )}
 
-      {/* Tab 7: Attendees (Admin / Organizer) */}
       {canManage && activeTab === 'attendees' && (
         <div className="bg-surface-primary rounded-xl border border-surface-border p-6 shadow-subtle">
           <h3 className="font-display font-bold text-base text-ink-primary mb-3 pb-3 border-b border-surface-border">
@@ -749,7 +727,6 @@ export default function EventDetail() {
         </div>
       )}
 
-      {/* Edit Event Modal */}
       <Modal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}

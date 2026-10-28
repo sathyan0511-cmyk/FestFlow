@@ -7,7 +7,7 @@ const api = axios.create({
   }
 });
 
-// Request interceptor to attach JWT token
+// Attach auth token if available
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('festflow_token');
@@ -19,12 +19,11 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response interceptor to handle errors gracefully
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
-      // If token expired or unauthorized on private route
+      // Clear stored credentials if unauthorized outside auth pages
       if (!window.location.pathname.includes('/login') && !window.location.pathname.includes('/register')) {
         localStorage.removeItem('festflow_token');
         localStorage.removeItem('festflow_user');

@@ -10,7 +10,6 @@ export default function Certificates() {
   const [certificates, setCertificates] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Verification state
   const [searchCode, setSearchCode] = useState('');
   const [verifiedResult, setVerifiedResult] = useState(null);
   const [verifyError, setVerifyError] = useState('');
@@ -59,7 +58,6 @@ export default function Certificates() {
 
   return (
     <div className="space-y-8 max-w-5xl mx-auto animate-fadeIn">
-      {/* Editorial Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-surface-border">
         <div>
           <div className="flex items-center gap-2 mb-2">
@@ -78,9 +76,7 @@ export default function Certificates() {
         </div>
       </div>
 
-      {/* Public Verification Box */}
       <div className="bg-surface-primary border border-surface-border rounded-xl p-6 sm:p-8 shadow-subtle relative overflow-hidden">
-        {/* Accent Bar */}
         <div className="absolute top-0 left-0 w-1.5 h-full bg-brand-accent" />
 
         <div className="max-w-2xl pl-2">
@@ -142,7 +138,6 @@ export default function Certificates() {
         </div>
       </div>
 
-      {/* My Certificates Grid */}
       <div className="space-y-4">
         <h3 className="font-mono text-2xs uppercase tracking-widest text-ink-muted font-bold">
           My Earned Credentials ({certificates.length})

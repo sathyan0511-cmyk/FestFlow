@@ -24,7 +24,6 @@ const registerForEvent = async (req, res, next) => {
       });
     }
 
-    // Check status
     if (event.status !== 'published' && event.status !== 'ongoing') {
       return res.status(400).json({
         success: false,
@@ -32,7 +31,6 @@ const registerForEvent = async (req, res, next) => {
       });
     }
 
-    // Check registration deadline
     const now = new Date();
     if (now > new Date(event.registrationDeadline)) {
       return res.status(400).json({
@@ -41,7 +39,6 @@ const registerForEvent = async (req, res, next) => {
       });
     }
 
-    // Check if user has an existing active registration
     const existingRegistration = await Registration.findOne({
       user: req.user.id,
       event: event._id
@@ -55,7 +52,7 @@ const registerForEvent = async (req, res, next) => {
       });
     }
 
-    // Check capacity against current active registrations
+    // Check available capacity
     const currentActiveCount = await Registration.countDocuments({
       event: event._id,
       registrationStatus: { $ne: 'cancelled' }
@@ -68,12 +65,11 @@ const registerForEvent = async (req, res, next) => {
       });
     }
 
-    // Generate unique ticket number
     const ticketNumber = `FF-${Date.now().toString(36).toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`;
 
     let registration;
     if (existingRegistration && existingRegistration.registrationStatus === 'cancelled') {
-      // Re-activate previously cancelled registration
+      // Reactivate previously cancelled registration
       existingRegistration.registrationStatus = 'registered';
       existingRegistration.registrationDate = new Date();
       existingRegistration.registrationType = registrationType;
@@ -148,7 +144,6 @@ const cancelRegistration = async (req, res, next) => {
       });
     }
 
-    // Check ownership or admin
     if (
       registration.user.toString() !== req.user.id.toString() &&
       req.user.role !== 'admin'
@@ -194,7 +189,6 @@ const getEventRegistrations = async (req, res, next) => {
       });
     }
 
-    // Permission check: Admin or organizer of the owning club
     const authorized = await isAuthorizedForClub(req.user, event.club);
     if (!authorized) {
       return res.status(403).json({

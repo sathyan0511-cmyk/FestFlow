@@ -89,7 +89,6 @@ export default function Events() {
 
   return (
     <div className="space-y-8 animate-fadeIn">
-      {/* Editorial Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 border-b border-surface-border">
         <div>
           <div className="flex items-center gap-2 mb-2">
@@ -129,7 +128,6 @@ export default function Events() {
         </div>
       )}
 
-      {/* Filter and Search Bar */}
       <div className="space-y-3">
         {(role === 'organizer' || role === 'faculty') && (
           <div className="flex items-center gap-2">
@@ -167,7 +165,6 @@ export default function Events() {
         )}
 
         <div className="bg-surface-primary rounded-xl border border-surface-border p-4 shadow-subtle flex flex-col md:flex-row gap-4 justify-between items-center">
-          {/* Search Input */}
           <div className="relative w-full md:w-80">
             <Search className="w-4 h-4 text-ink-muted absolute left-3 top-1/2 -translate-y-1/2" />
             <input
@@ -179,7 +176,6 @@ export default function Events() {
             />
           </div>
 
-          {/* Event Type Filter Pills */}
           <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0">
             {eventTypes.map((type) => {
               const isSelected = selectedType === type || (!selectedType && type === 'All');
@@ -201,7 +197,6 @@ export default function Events() {
         </div>
       </div>
 
-      {/* Events Grid */}
       {loading ? (
         <LoadingSpinner message="Scanning university calendar..." />
       ) : displayedEvents.length === 0 ? (

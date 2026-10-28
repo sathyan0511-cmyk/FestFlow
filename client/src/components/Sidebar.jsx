@@ -24,7 +24,7 @@ import {
 export default function Sidebar({ isOpen, onClose }) {
   const { user, role } = useAuth();
 
-  // Role-appropriate navigation items
+  // Navigation items tailored by role
   let navItems = [];
 
   if (role === 'organizer') {
@@ -57,7 +57,6 @@ export default function Sidebar({ isOpen, onClose }) {
       { label: 'Volunteering', to: '/volunteering', icon: HeartHandshake }
     ];
   } else {
-    // Admin navigation
     navItems = [
       { label: 'Overview', to: '/', icon: LayoutDashboard },
       { label: 'Event Discovery', to: '/events', icon: Compass },
@@ -77,7 +76,6 @@ export default function Sidebar({ isOpen, onClose }) {
 
   return (
     <>
-      {/* Mobile backdrop */}
       {isOpen && (
         <div
           onClick={onClose}
@@ -91,7 +89,6 @@ export default function Sidebar({ isOpen, onClose }) {
         }`}
       >
         <div className="flex-1 flex flex-col min-h-0">
-          {/* Brand Wordmark Header */}
           <div className="h-16 flex items-center justify-between px-6 border-b border-[#2C2C29] shrink-0">
             <NavLink to="/" className="flex items-center gap-2.5 group">
               <span className="w-7 h-7 rounded-md bg-accent flex items-center justify-center font-display font-bold text-white text-base">
@@ -115,7 +112,6 @@ export default function Sidebar({ isOpen, onClose }) {
             </button>
           </div>
 
-          {/* Quick Action for Organizers / Admins */}
           {canCreateEvents && (
             <div className="px-4 pt-4 pb-1 shrink-0">
               <NavLink
@@ -129,7 +125,6 @@ export default function Sidebar({ isOpen, onClose }) {
             </div>
           )}
 
-          {/* Navigation Links */}
           <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
             <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-white/40 mb-2">
               {role === 'faculty' ? 'Faculty Console' : role === 'organizer' ? 'Club Operations' : role === 'admin' ? 'Administration' : 'Student Portal'}
@@ -158,7 +153,6 @@ export default function Sidebar({ isOpen, onClose }) {
           </nav>
         </div>
 
-        {/* User Role Card */}
         <div className="p-3.5 border-t border-[#2C2C29] bg-[#121212] shrink-0">
           <div className="flex items-center justify-between text-xs text-white/80">
             <div className="flex items-center gap-2">

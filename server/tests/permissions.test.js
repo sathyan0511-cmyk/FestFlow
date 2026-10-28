@@ -221,7 +221,7 @@ const runPermissionTests = async () => {
         }
       };
 
-      // --- TEST 1: Student views events across clubs (Allowed 200) ---
+      // Test 1: Student views events across clubs
       const t1 = await request({
         hostname: 'localhost',
         port: PORT,
@@ -231,7 +231,7 @@ const runPermissionTests = async () => {
       });
       assertCheck('1. Student views events across clubs', t1.status === 200 && t1.data.count >= 2);
 
-      // --- TEST 2: Student registers for another club\'s event (Allowed 201) ---
+      // Test 2: Student registers for another club's event
       const t2 = await request(
         {
           hostname: 'localhost',
@@ -245,7 +245,7 @@ const runPermissionTests = async () => {
       if (t2.data.registration) createdRegIds.push(t2.data.registration._id);
       assertCheck('2. Student registers for another club\'s event', t2.status === 201 && t2.data.success);
 
-      // --- TEST 3: Student creates an event (Forbidden 403) ---
+      // Test 3: Student creates an event (Forbidden)
       const t3 = await request(
         {
           hostname: 'localhost',
@@ -270,7 +270,7 @@ const runPermissionTests = async () => {
       );
       assertCheck('3. Student creates an event -> Forbidden 403', t3.status === 403);
 
-      // --- TEST 4: Student edits or deletes an event (Forbidden 403) ---
+      // Test 4: Student edits or deletes an event (Forbidden)
       const t4a = await request(
         {
           hostname: 'localhost',
@@ -290,7 +290,7 @@ const runPermissionTests = async () => {
       });
       assertCheck('4. Student edits or deletes an event -> Forbidden 403', t4a.status === 403 && t4b.status === 403);
 
-      // --- TEST 5: Organizer creates an event for an associated club (Allowed 201) ---
+      // Test 5: Organizer creates an event for an associated club (Allowed)
       const t5 = await request(
         {
           hostname: 'localhost',
@@ -316,7 +316,7 @@ const runPermissionTests = async () => {
       if (t5.data?.event) createdEventIds.push(t5.data.event._id);
       assertCheck('5. Organizer creates an event for an associated club -> Allowed 201', t5.status === 201 && t5.data.success);
 
-      // --- TEST 6: Organizer creates an event for an unrelated club (Forbidden 403) ---
+      // Test 6: Organizer creates an event for an unrelated club (Forbidden)
       const t6 = await request(
         {
           hostname: 'localhost',
@@ -341,7 +341,7 @@ const runPermissionTests = async () => {
       );
       assertCheck('6. Organizer creates an event for an unrelated club -> Forbidden 403', t6.status === 403);
 
-      // --- TEST 7: Organizer edits another organizer\'s event in the same club (Allowed 200) ---
+      // Test 7: Organizer edits another organizer's event in the same club
       const t7 = await request(
         {
           hostname: 'localhost',
@@ -357,7 +357,7 @@ const runPermissionTests = async () => {
         t7.status === 200 && t7.data.event?.title === 'PermTest Event Alpha 1 Updated by Peer OrgB'
       );
 
-      // --- TEST 8: Organizer deletes another organizer\'s event in the same club (Allowed 200) ---
+      // Test 8: Organizer deletes another organizer's event in the same club
       const t8 = await request({
         hostname: 'localhost',
         port: PORT,
@@ -367,7 +367,7 @@ const runPermissionTests = async () => {
       });
       assertCheck('8. Organizer deletes another organizer\'s event in the same club -> Allowed 200', t8.status === 200);
 
-      // --- TEST 9: Organizer edits an unrelated club\'s event (Forbidden 403) ---
+      // Test 9: Organizer edits an unrelated club's event (Forbidden)
       const t9 = await request(
         {
           hostname: 'localhost',
@@ -380,7 +380,7 @@ const runPermissionTests = async () => {
       );
       assertCheck('9. Organizer edits an unrelated club\'s event -> Forbidden 403', t9.status === 403);
 
-      // --- TEST 10: Organizer belongs to two clubs and manages both (Allowed 200) ---
+      // Test 10: Organizer belongs to two clubs and manages both
       const t10a = await request(
         {
           hostname: 'localhost',
@@ -406,7 +406,7 @@ const runPermissionTests = async () => {
         t10a.status === 200 && t10b.status === 200
       );
 
-      // --- TEST 11: Organizer registers for an event outside their clubs (Allowed 201) ---
+      // Test 11: Organizer registers for an event outside their clubs
       const t11 = await request(
         {
           hostname: 'localhost',
@@ -420,7 +420,7 @@ const runPermissionTests = async () => {
       if (t11.data?.registration) createdRegIds.push(t11.data.registration._id);
       assertCheck('11. Organizer registers for an event outside their clubs -> Allowed 201', t11.status === 201 && t11.data.success);
 
-      // --- TEST 12: Organizer reads finances for an associated club\'s event (Allowed 200) ---
+      // Test 12: Organizer reads finances for an associated club's event
       const t12 = await request({
         hostname: 'localhost',
         port: PORT,
@@ -430,7 +430,7 @@ const runPermissionTests = async () => {
       });
       assertCheck('12. Organizer reads finances for an associated club\'s event -> Allowed 200', t12.status === 200 && t12.data.success);
 
-      // --- TEST 13: Organizer reads finances for an unrelated club\'s event (Forbidden 403) ---
+      // Test 13: Organizer reads finances for an unrelated club's event (Forbidden)
       const t13 = await request({
         hostname: 'localhost',
         port: PORT,
@@ -440,7 +440,7 @@ const runPermissionTests = async () => {
       });
       assertCheck('13. Organizer reads finances for an unrelated club\'s event -> Forbidden 403', t13.status === 403);
 
-      // --- TEST 14: Organizer creates or modifies financial records for an unrelated club (Forbidden 403) ---
+      // Test 14: Organizer creates or modifies financial records for an unrelated club (Forbidden)
       const t14expense = await request(
         {
           hostname: 'localhost',
@@ -466,7 +466,7 @@ const runPermissionTests = async () => {
         t14expense.status === 403 && t14budget.status === 403
       );
 
-      // --- TEST 15: Organizer requests aggregate/event list -> Unauthorized records excluded ---
+      // Test 15: Organizer requests finance events (unauthorized excluded)
       const t15 = await request({
         hostname: 'localhost',
         port: PORT,
@@ -482,7 +482,7 @@ const runPermissionTests = async () => {
         t15.status === 200 && hasAlpha && !hasBeta
       );
 
-      // --- TEST 16: Admin performs existing authorized operations (Allowed 200) ---
+      // Test 16: Admin performs existing authorized operations
       const t16 = await request({
         hostname: 'localhost',
         port: PORT,
@@ -492,7 +492,7 @@ const runPermissionTests = async () => {
       });
       assertCheck('16. Admin performs existing authorized operations -> Preserved 200', t16.status === 200 && t16.data.success);
 
-      // --- TEST 17: Unauthenticated user attempts protected operation (Unauthorized 401) ---
+      // Test 17: Unauthenticated user attempts protected operation
       const t17 = await request(
         {
           hostname: 'localhost',

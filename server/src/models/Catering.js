@@ -63,7 +63,7 @@ const cateringSchema = new mongoose.Schema(
   }
 );
 
-// Virtual for derived total cost (3NF compliant: Quantity * Cost_Per_Unit)
+// Virtual for derived total cost (Quantity * Cost_Per_Unit)
 cateringSchema.virtual('totalCost').get(function () {
   if (!this.menu || !this.menu.length) return 0;
   return this.menu.reduce((sum, item) => sum + (item.quantity * item.costPerUnit), 0);

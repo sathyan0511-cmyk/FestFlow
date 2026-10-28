@@ -35,7 +35,6 @@ const getEvents = async (req, res, next) => {
       .populate('createdBy', 'name email')
       .sort({ startDate: 1 });
 
-    // Aggregate registration counts for each event dynamically (without redundant storage)
     const eventIds = events.map((e) => e._id);
     const regCounts = await Registration.aggregate([
       {
@@ -95,7 +94,6 @@ const getEventById = async (req, res, next) => {
       });
     }
 
-    // Dynamic count of active registrations
     const registeredCount = await Registration.countDocuments({
       event: event._id,
       registrationStatus: { $ne: 'cancelled' }
@@ -140,7 +138,6 @@ const createEvent = async (req, res, next) => {
       status
     } = req.body;
 
-    // Validate club exists
     const clubDoc = await Club.findById(club);
     if (!clubDoc) {
       return res.status(400).json({
@@ -149,7 +146,6 @@ const createEvent = async (req, res, next) => {
       });
     }
 
-    // Verify organizer or admin authorization for this specific club
     const authorized = await isAuthorizedForClub(req.user, clubDoc._id);
     if (!authorized) {
       return res.status(403).json({
@@ -158,7 +154,6 @@ const createEvent = async (req, res, next) => {
       });
     }
 
-    // Validate venue exists and capacity
     const venueDoc = await Venue.findById(venue);
     if (!venueDoc) {
       return res.status(400).json({
@@ -174,7 +169,6 @@ const createEvent = async (req, res, next) => {
       });
     }
 
-    // Date validations
     const start = new Date(startDate);
     const end = new Date(endDate);
     const deadline = new Date(registrationDeadline);
@@ -241,7 +235,6 @@ const updateEvent = async (req, res, next) => {
       });
     }
 
-    // Check permission: Admin or organizer of the owning club
     const authorizedSource = await isAuthorizedForClub(req.user, event.club);
     if (!authorizedSource) {
       return res.status(403).json({
@@ -250,7 +243,7 @@ const updateEvent = async (req, res, next) => {
       });
     }
 
-    // If transferring event to another club, verify authorization for destination club
+    // Check permissions for target club if moving the event
     if (req.body.club && req.body.club.toString() !== event.club.toString()) {
       const targetClubDoc = await Club.findById(req.body.club);
       if (!targetClubDoc) {
@@ -268,7 +261,6 @@ const updateEvent = async (req, res, next) => {
       }
     }
 
-    // If venue is updated, check capacity
     if (req.body.venue || req.body.maxParticipants) {
       const targetVenueId = req.body.venue || event.venue;
       const targetMax = req.body.maxParticipants || event.maxParticipants;
@@ -312,7 +304,6 @@ const deleteEvent = async (req, res, next) => {
       });
     }
 
-    // Check permission: Admin or organizer of the owning club
     const authorized = await isAuthorizedForClub(req.user, event.club);
     if (!authorized) {
       return res.status(403).json({
@@ -321,7 +312,6 @@ const deleteEvent = async (req, res, next) => {
       });
     }
 
-    // Delete associated registrations
     await Registration.deleteMany({ event: event._id });
     await event.deleteOne();
 

@@ -49,7 +49,7 @@ export default function Dashboard() {
         setUpcomingEvents(eventsRes.data.events || []);
       }
 
-      // If organizer or faculty, fetch their authorized/supervised clubs
+      // Fetch authorized clubs for organizer or faculty
       if (role === 'organizer' || role === 'faculty') {
         const clubsRes = await api.get('/clubs/my-authorized').catch(() => ({ data: {} }));
         if (clubsRes.data?.success && Array.isArray(clubsRes.data.clubs)) {
@@ -57,7 +57,7 @@ export default function Dashboard() {
         }
       }
 
-      // If student or organizer, get their registration list to know which events they're already in
+      // Track registered event IDs for quick status lookup
       if (role === 'student' || role === 'organizer' || role === 'faculty') {
         const myRegRes = await api.get('/registrations/my').catch(() => ({ data: {} }));
         if (myRegRes.data?.success && Array.isArray(myRegRes.data.registrations)) {
@@ -129,9 +129,7 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-8 animate-fadeIn">
-      {/* Editorial Masthead Banner */}
       <div className="bg-surface-primary border border-surface-border rounded-xl p-6 sm:p-8 shadow-subtle relative overflow-hidden">
-        {/* Left Accent Bar */}
         <div className="absolute top-0 left-0 w-1.5 h-full bg-brand-accent" />
 
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pl-2">
@@ -205,7 +203,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Prominent My Clubs Section for Organizers and Faculty */}
       {(role === 'organizer' || role === 'faculty') && (
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 pb-2 border-b border-surface-border">
@@ -224,7 +221,6 @@ export default function Dashboard() {
               </h2>
             </div>
 
-            {/* Club Selector / Filter if multiple clubs */}
             {myClubs.length > 1 && (
               <div className="flex items-center gap-2">
                 <span className="text-xs font-semibold text-ink-secondary">Focus Club:</span>
@@ -327,7 +323,6 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Notifications / Alerts */}
       {actionSuccess && (
         <div className="p-4 bg-emerald-50 border border-emerald-200 text-status-success rounded-lg text-xs font-medium flex items-center gap-2.5 shadow-subtle">
           <CheckCircle2 className="w-4 h-4 shrink-0" />
@@ -342,7 +337,6 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Primary Metrics Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           title="All Scheduled Events"
@@ -393,7 +387,6 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* Featured Upcoming Events */}
       <div className="space-y-4">
         <div className="flex items-end justify-between pb-2 border-b border-surface-border">
           <div>
@@ -457,7 +450,6 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* Recent Activity / Registrations Feed */}
       {stats?.recentRegistrations && stats.recentRegistrations.length > 0 && (
         <div className="bg-surface-primary rounded-xl border border-surface-border p-6 shadow-subtle">
           <div className="flex items-center justify-between mb-4 pb-3 border-b border-surface-border">

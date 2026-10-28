@@ -38,10 +38,8 @@ export default function ClubManage() {
   const [error, setError] = useState('');
   const [actionSuccess, setActionSuccess] = useState('');
 
-  // Tabs: overview, organizers, members, events
   const [activeTab, setActiveTab] = useState('overview');
 
-  // Assign Organizer Modal
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [searchStudent, setSearchStudent] = useState('');
   const [candidates, setCandidates] = useState([]);
@@ -49,7 +47,6 @@ export default function ClubManage() {
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [assigning, setAssigning] = useState(false);
 
-  // Revoke Organizer Confirmation Modal
   const [revokeModalOpen, setRevokeModalOpen] = useState(false);
   const [studentToRevoke, setStudentToRevoke] = useState(null);
   const [revoking, setRevoking] = useState(false);
@@ -85,7 +82,7 @@ export default function ClubManage() {
     fetchClubData();
   }, [fetchClubData]);
 
-  // Search candidate students when typing in assign modal
+  // Debounced lookup for eligible student candidates
   useEffect(() => {
     if (!isAssignModalOpen) return;
     const delayDebounce = setTimeout(async () => {
@@ -184,7 +181,6 @@ export default function ClubManage() {
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto animate-fadeIn">
-      {/* Top Breadcrumb & Managing Context Badge */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <Link
           to="/"
@@ -219,7 +215,6 @@ export default function ClubManage() {
         </div>
       )}
 
-      {/* Main Club Masthead */}
       <div className="bg-surface-primary rounded-xl border border-surface-border p-6 sm:p-8 shadow-subtle">
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
           <div className="flex items-start gap-4">
@@ -254,7 +249,6 @@ export default function ClubManage() {
           )}
         </div>
 
-        {/* Club Metadata Grid */}
         <div className="mt-6 pt-5 border-t border-surface-border grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
           <div className="p-3 rounded-lg bg-surface-secondary/70 border border-surface-border/60">
             <p className="font-mono text-2xs uppercase tracking-wider text-ink-muted">Faculty Coordinator</p>
@@ -284,7 +278,6 @@ export default function ClubManage() {
         </div>
       </div>
 
-      {/* Tabs Navigation */}
       <div className="flex items-center gap-1.5 border-b border-surface-border pb-2 overflow-x-auto">
         <button
           onClick={() => setActiveTab('overview')}
@@ -320,10 +313,8 @@ export default function ClubManage() {
         </button>
       </div>
 
-      {/* Tab 1: Overview & Events */}
       {activeTab === 'overview' && (
         <div className="space-y-6">
-          {/* Upcoming Events */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="font-display font-bold text-base text-ink-primary">
@@ -374,7 +365,6 @@ export default function ClubManage() {
             )}
           </div>
 
-          {/* Past Events */}
           {pastEvents.length > 0 && (
             <div className="space-y-3 pt-4 border-t border-surface-border">
               <h3 className="font-display font-bold text-base text-ink-primary">
@@ -407,7 +397,6 @@ export default function ClubManage() {
         </div>
       )}
 
-      {/* Tab 2: Organizers Management */}
       {activeTab === 'organizers' && (
         <div className="bg-surface-primary rounded-xl border border-surface-border p-6 shadow-subtle space-y-5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-surface-border">
@@ -486,7 +475,6 @@ export default function ClubManage() {
         </div>
       )}
 
-      {/* Tab 3: Enrolled Student Members */}
       {activeTab === 'members' && (
         <div className="bg-surface-primary rounded-xl border border-surface-border p-6 shadow-subtle space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-surface-border">
@@ -572,7 +560,6 @@ export default function ClubManage() {
         </div>
       )}
 
-      {/* Assign Organizer Modal */}
       <Modal
         isOpen={isAssignModalOpen}
         onClose={() => {
@@ -598,7 +585,6 @@ export default function ClubManage() {
             />
           </div>
 
-          {/* Candidate Students List */}
           <div className="border border-surface-border rounded-lg max-h-60 overflow-y-auto divide-y divide-surface-border">
             {searchingCandidates ? (
               <div className="p-4 text-center text-ink-muted font-mono text-2xs">
@@ -689,7 +675,6 @@ export default function ClubManage() {
         </div>
       </Modal>
 
-      {/* Revoke Organizer Modal */}
       <Modal
         isOpen={revokeModalOpen}
         onClose={() => {

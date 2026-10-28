@@ -46,13 +46,11 @@ export default function App() {
   return (
     <AuthProvider>
       <Routes>
-        {/* Public Auth Routes */}
         <Route element={<AuthLayout />}>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
         </Route>
 
-        {/* Protected Dashboard Routes */}
         <Route element={<DashboardLayout />}>
           <Route
             path="/"

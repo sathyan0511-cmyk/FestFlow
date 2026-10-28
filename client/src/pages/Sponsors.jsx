@@ -18,13 +18,11 @@ export default function Sponsors() {
   const [eventSponsorships, setEventSponsorships] = useState([]);
   const [totalRaised, setTotalRaised] = useState(0);
 
-  // Modals
   const [isSponsorModalOpen, setIsSponsorModalOpen] = useState(false);
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
   const [submittingSponsor, setSubmittingSponsor] = useState(false);
   const [submittingLink, setSubmittingLink] = useState(false);
 
-  // Forms
   const [sponsorForm, setSponsorForm] = useState({
     name: '',
     contactPerson: '',
@@ -126,7 +124,6 @@ export default function Sponsors() {
 
   return (
     <div className="space-y-6 animate-fadeIn">
-      {/* Editorial Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-surface-border">
         <div>
           <div className="flex items-center gap-2 mb-2">
@@ -162,7 +159,6 @@ export default function Sponsors() {
         </div>
       </div>
 
-      {/* Event Selector & Raised summary */}
       <div className="bg-surface-primary rounded-xl border border-surface-border p-5 shadow-subtle flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <label htmlFor="sponsor-event-select" className="text-xs font-semibold text-ink-secondary whitespace-nowrap">
@@ -189,7 +185,6 @@ export default function Sponsors() {
         </div>
       </div>
 
-      {/* Event Sponsorships List */}
       <div className="space-y-3">
         <h3 className="font-mono text-2xs uppercase tracking-widest text-ink-muted font-bold">
           Active Festival Sponsorships ({eventSponsorships.length})
@@ -226,7 +221,6 @@ export default function Sponsors() {
         )}
       </div>
 
-      {/* All Registered Sponsors Directory */}
       <div className="bg-surface-primary rounded-xl border border-surface-border p-6 shadow-subtle">
         <h3 className="font-display font-bold text-base text-ink-primary mb-4 pb-3 border-b border-surface-border">
           Corporate Directory ({sponsors.length})
@@ -246,7 +240,6 @@ export default function Sponsors() {
         </div>
       </div>
 
-      {/* Add Sponsor Modal */}
       <Modal isOpen={isSponsorModalOpen} onClose={() => setIsSponsorModalOpen(false)} title="Register Partner Organization">
         <form onSubmit={handleCreateSponsor} className="space-y-4">
           <div>
@@ -321,7 +314,6 @@ export default function Sponsors() {
         </form>
       </Modal>
 
-      {/* Link Sponsor Modal */}
       <Modal isOpen={isLinkModalOpen} onClose={() => setIsLinkModalOpen(false)} title="Allocate Sponsorship to Festival">
         <form onSubmit={handleLinkSponsor} className="space-y-4">
           <div>

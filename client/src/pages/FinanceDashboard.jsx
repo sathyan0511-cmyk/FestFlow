@@ -34,13 +34,11 @@ export default function FinanceDashboard() {
   const [financeLoading, setFinanceLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Modals
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
   const [isRevenueModalOpen, setIsRevenueModalOpen] = useState(false);
   const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  // Forms
   const [expenseForm, setExpenseForm] = useState({
     amount: '',
     expenseCategory: 'equipment',
@@ -252,12 +250,10 @@ export default function FinanceDashboard() {
   const netProfit = summary.profit !== undefined ? summary.profit : (totalRevenue - totalExpenditure);
   const isProfitable = netProfit >= 0;
 
-  // Calculate budget utilization percentage
   const budgetUtilization = approvedBudget > 0 ? Math.min(100, Math.round((totalExpenditure / approvedBudget) * 100)) : 0;
 
   return (
     <div className="space-y-8 animate-fadeIn">
-      {/* Editorial Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 border-b border-surface-border">
         <div>
           <div className="flex items-center gap-2.5 mb-2">
@@ -277,7 +273,6 @@ export default function FinanceDashboard() {
           </p>
         </div>
 
-        {/* Event Selector & Actions */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
           {availableClubs.length > 1 && (
             <div className="relative">
@@ -325,7 +320,6 @@ export default function FinanceDashboard() {
         </div>
       </div>
 
-      {/* Selected Event Context Card */}
       {selectedEvent && (
         <div className="bg-surface-primary border border-surface-border rounded-xl p-5 shadow-subtle flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1">
@@ -339,7 +333,6 @@ export default function FinanceDashboard() {
             </p>
           </div>
 
-          {/* Action Triggers */}
           <div className="flex items-center gap-2 flex-wrap">
             <button
               onClick={() => {
@@ -373,7 +366,6 @@ export default function FinanceDashboard() {
         </div>
       )}
 
-      {/* Financial Metrics Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           title="Approved Budget"
@@ -405,7 +397,6 @@ export default function FinanceDashboard() {
         />
       </div>
 
-      {/* Budget Utilization Indicator */}
       {approvedBudget > 0 && (
         <div className="bg-surface-primary border border-surface-border rounded-xl p-5 shadow-subtle">
           <div className="flex items-center justify-between text-xs mb-2">
@@ -429,9 +420,7 @@ export default function FinanceDashboard() {
         </div>
       )}
 
-      {/* Two-Column Ledger Tables */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Expenses Ledger */}
         <div className="bg-surface-primary rounded-xl border border-surface-border p-5 shadow-subtle">
           <div className="flex items-center justify-between mb-4 pb-3 border-b border-surface-border">
             <div className="flex items-center gap-2">
@@ -489,7 +478,6 @@ export default function FinanceDashboard() {
           )}
         </div>
 
-        {/* Revenues Ledger */}
         <div className="bg-surface-primary rounded-xl border border-surface-border p-5 shadow-subtle">
           <div className="flex items-center justify-between mb-4 pb-3 border-b border-surface-border">
             <div className="flex items-center gap-2">
@@ -548,7 +536,6 @@ export default function FinanceDashboard() {
         </div>
       </div>
 
-      {/* Record Expense Modal */}
       <Modal
         isOpen={isExpenseModalOpen}
         onClose={() => setIsExpenseModalOpen(false)}
@@ -620,7 +607,6 @@ export default function FinanceDashboard() {
         </form>
       </Modal>
 
-      {/* Record Revenue Modal */}
       <Modal
         isOpen={isRevenueModalOpen}
         onClose={() => setIsRevenueModalOpen(false)}
@@ -691,7 +677,6 @@ export default function FinanceDashboard() {
         </form>
       </Modal>
 
-      {/* Set Budget Modal */}
       <Modal
         isOpen={isBudgetModalOpen}
         onClose={() => setIsBudgetModalOpen(false)}

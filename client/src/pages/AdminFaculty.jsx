@@ -26,7 +26,6 @@ export default function AdminFaculty() {
   const [error, setError] = useState('');
   const [actionSuccess, setActionSuccess] = useState('');
 
-  // Create Faculty Modal
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [createForm, setCreateForm] = useState({
     name: '',
@@ -38,7 +37,6 @@ export default function AdminFaculty() {
   });
   const [creating, setCreating] = useState(false);
 
-  // Edit Faculty Modal
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingFaculty, setEditingFaculty] = useState(null);
   const [editForm, setEditForm] = useState({
@@ -164,7 +162,6 @@ export default function AdminFaculty() {
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto animate-fadeIn">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-surface-border">
         <div>
           <div className="flex items-center gap-2 mb-2">
@@ -205,7 +202,6 @@ export default function AdminFaculty() {
         </div>
       )}
 
-      {/* Faculty Accounts Table */}
       <div className="bg-surface-primary rounded-xl border border-surface-border p-6 shadow-subtle space-y-4">
         <h3 className="font-display font-bold text-base text-ink-primary pb-3 border-b border-surface-border">
           Active Faculty Supervisors ({facultyList.length})
@@ -271,7 +267,6 @@ export default function AdminFaculty() {
         )}
       </div>
 
-      {/* Create Faculty Modal */}
       <Modal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
@@ -350,7 +345,6 @@ export default function AdminFaculty() {
             </div>
           </div>
 
-          {/* Club Supervision Selection */}
           <div>
             <label className="block text-xs font-semibold text-ink-secondary mb-1">
               Designate Supervised Clubs
@@ -401,7 +395,6 @@ export default function AdminFaculty() {
         </form>
       </Modal>
 
-      {/* Edit Faculty Modal */}
       <Modal
         isOpen={isEditModalOpen}
         onClose={() => {
@@ -439,7 +432,6 @@ export default function AdminFaculty() {
             </div>
           </div>
 
-          {/* Club Supervision Selection */}
           <div>
             <label className="block text-xs font-semibold text-ink-secondary mb-1">
               Supervised Clubs Mandate

@@ -43,7 +43,6 @@ const getEventFinancials = async (req, res, next) => {
       });
     }
 
-    // Enforce club-level authorization
     const authorized = await isAuthorizedForClub(req.user, event.club);
     if (!authorized) {
       return res.status(403).json({
@@ -58,7 +57,7 @@ const getEventFinancials = async (req, res, next) => {
       Revenue.find({ event: eventId }).sort({ revenueDate: -1 })
     ]);
 
-    // Dynamic derivation without redundant database column storage (3NF)
+    // Derived on the fly without storing redundant totals in DB
     const totalExpenditure = expenses.reduce((sum, item) => sum + (item.amount || 0), 0);
     const totalRevenue = revenues.reduce((sum, item) => sum + (item.amount || 0), 0);
     const profit = totalRevenue - totalExpenditure;
@@ -95,7 +94,6 @@ const setEventBudget = async (req, res, next) => {
       });
     }
 
-    // Enforce club-level authorization
     const authorized = await isAuthorizedForClub(req.user, event.club);
     if (!authorized) {
       return res.status(403).json({
@@ -140,7 +138,6 @@ const addExpense = async (req, res, next) => {
       });
     }
 
-    // Enforce club-level authorization
     const authorized = await isAuthorizedForClub(req.user, event.club);
     if (!authorized) {
       return res.status(403).json({
@@ -181,7 +178,6 @@ const addRevenue = async (req, res, next) => {
       });
     }
 
-    // Enforce club-level authorization
     const authorized = await isAuthorizedForClub(req.user, event.club);
     if (!authorized) {
       return res.status(403).json({

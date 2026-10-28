@@ -11,7 +11,6 @@ const Event = require('../models/Event');
 const User = require('../models/User');
 const { isAuthorizedForClub } = require('../utils/clubAuthorization');
 
-// --- 1. COMPETITION ---
 const createCompetition = async (req, res, next) => {
   try {
     const {
@@ -101,7 +100,6 @@ const getCompetitionDetails = async (req, res, next) => {
   }
 };
 
-// --- 2. TEAMS ---
 const registerTeam = async (req, res, next) => {
   try {
     const { competitionId, teamName, memberUserIds = [] } = req.body;
@@ -109,13 +107,11 @@ const registerTeam = async (req, res, next) => {
     const comp = await Competition.findById(competitionId);
     if (!comp) return res.status(404).json({ success: false, message: 'Competition not found' });
 
-    // Check maximum teams
     const currentTeamCount = await Team.countDocuments({ competition: competitionId });
     if (currentTeamCount >= comp.maximumTeams) {
       return res.status(400).json({ success: false, message: 'Competition team capacity reached' });
     }
 
-    // Build members array with team leader
     const members = [{
       user: req.user.id,
       memberRole: 'Leader',
@@ -154,7 +150,6 @@ const registerTeam = async (req, res, next) => {
   }
 };
 
-// --- 3. JUDGING & SCORES ---
 const addJudgingCriteria = async (req, res, next) => {
   try {
     const { competitionId, criteriaName, description, maximumScore, weightage } = req.body;
@@ -234,7 +229,6 @@ const submitScore = async (req, res, next) => {
   }
 };
 
-// --- 4. PRIZES & RESULTS ---
 const addPrize = async (req, res, next) => {
   try {
     const { competitionId, prizeName, position, amount } = req.body;
@@ -272,7 +266,6 @@ const declareResult = async (req, res, next) => {
       { new: true, upsert: true, runValidators: true }
     );
 
-    // Update team status
     await Team.findByIdAndUpdate(teamId, { teamStatus: 'winner' });
 
     res.status(200).json({

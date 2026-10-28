@@ -163,7 +163,6 @@ export default function CreateEvent() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Section 1: Event Identity */}
           <div className="space-y-4">
             <h3 className="font-mono text-2xs uppercase tracking-wider text-ink-muted font-bold">
               1. Event Identity & Scope
@@ -236,7 +235,6 @@ export default function CreateEvent() {
             </div>
           </div>
 
-          {/* Section 2: Hosting Body & Venue */}
           <div className="space-y-4 pt-4 border-t border-surface-border">
             <h3 className="font-mono text-2xs uppercase tracking-wider text-ink-muted font-bold">
               2. Organizing Club & Campus Venue
@@ -300,7 +298,6 @@ export default function CreateEvent() {
             </div>
           </div>
 
-          {/* Section 3: Schedule & Timing */}
           <div className="space-y-4 pt-4 border-t border-surface-border">
             <h3 className="font-mono text-2xs uppercase tracking-wider text-ink-muted font-bold">
               3. Schedule & Hours
@@ -367,7 +364,6 @@ export default function CreateEvent() {
             </div>
           </div>
 
-          {/* Section 4: Admissions & Guests */}
           <div className="space-y-4 pt-4 border-t border-surface-border">
             <h3 className="font-mono text-2xs uppercase tracking-wider text-ink-muted font-bold">
               4. Registration Controls & Guests
@@ -435,7 +431,6 @@ export default function CreateEvent() {
             </div>
           </div>
 
-          {/* Form Actions */}
           <div className="pt-6 border-t border-surface-border flex items-center justify-end gap-3">
             <Link
               to="/events"

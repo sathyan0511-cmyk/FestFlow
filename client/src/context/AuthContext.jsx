@@ -8,7 +8,7 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(localStorage.getItem('festflow_token') || null);
   const [loading, setLoading] = useState(true);
 
-  // Initialize user from localStorage and verify with backend
+  // Restore session from localStorage and verify with backend
   useEffect(() => {
     const initAuth = async () => {
       const storedToken = localStorage.getItem('festflow_token');
@@ -17,7 +17,6 @@ export const AuthProvider = ({ children }) => {
       if (storedToken && storedUser) {
         try {
           setUser(JSON.parse(storedUser));
-          // Verify with server
           const res = await api.get('/auth/me');
           if (res.data.success) {
             setUser(res.data.user);

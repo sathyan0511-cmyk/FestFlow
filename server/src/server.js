@@ -5,7 +5,6 @@ const morgan = require('morgan');
 const connectDB = require('./config/db');
 const errorHandler = require('./middleware/errorHandler');
 
-// Route imports
 const authRoutes = require('./routes/authRoutes');
 const clubRoutes = require('./routes/clubRoutes');
 const venueRoutes = require('./routes/venueRoutes');
@@ -25,7 +24,6 @@ const facultyRoutes = require('./routes/facultyRoutes');
 
 const app = express();
 
-// Middleware
 const allowedOrigins = [
   process.env.CLIENT_URL || 'http://localhost:5173',
   'http://localhost:3000',
@@ -35,7 +33,7 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: function (origin, callback) {
-      // allow requests with no origin (like mobile apps, curl, postman)
+      // Allow requests with no origin (curl, postman, mobile)
       if (!origin) return callback(null, true);
       if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
         return callback(null, true);
@@ -53,7 +51,6 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
 
-// Health check endpoint
 app.get('/api/health', (req, res) => {
   res.status(200).json({
     status: 'online',
@@ -63,7 +60,6 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/clubs', clubRoutes);
 app.use('/api/venues', venueRoutes);
@@ -81,7 +77,6 @@ app.use('/api/catering', cateringRoutes);
 app.use('/api/competitions', competitionRoutes);
 app.use('/api/faculty', facultyRoutes);
 
-// 404 Handler
 app.use((req, res) => {
   res.status(404).json({
     success: false,
@@ -89,7 +84,6 @@ app.use((req, res) => {
   });
 });
 
-// Error handling middleware
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;

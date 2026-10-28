@@ -31,7 +31,6 @@ const getDashboardStats = async (req, res, next) => {
       User.countDocuments({ role: 'student' })
     ]);
 
-    // Role-specific metrics
     let userStats = {};
     if (userRole === 'student') {
       const [myTotalRegistrations, myActiveRegistrations] = await Promise.all([
@@ -95,21 +94,18 @@ const getDashboardStats = async (req, res, next) => {
       };
     }
 
-    // Recent 5 events
     const recentEvents = await Event.find({ status: { $ne: 'draft' } })
       .populate('club', 'name')
       .populate('venue', 'name')
       .sort({ startDate: -1 })
       .limit(5);
 
-    // Recent 5 registrations
     const recentRegistrations = await Registration.find()
       .populate('user', 'name email department')
       .populate('event', 'title startDate')
       .sort({ createdAt: -1 })
       .limit(5);
 
-    // Events by type breakdown
     const eventTypeBreakdown = await Event.aggregate([
       { $group: { _id: '$eventType', count: { $sum: 1 } } }
     ]);

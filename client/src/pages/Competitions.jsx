@@ -31,7 +31,6 @@ export default function Competitions() {
   const [compDetails, setCompDetails] = useState(null);
   const [detailsLoading, setDetailsLoading] = useState(false);
 
-  // Modals
   const [isTeamModalOpen, setIsTeamModalOpen] = useState(false);
   const [isCompModalOpen, setIsCompModalOpen] = useState(false);
   const [teamName, setTeamName] = useState('');
@@ -39,7 +38,6 @@ export default function Competitions() {
   const [submittingTeam, setSubmittingTeam] = useState(false);
   const [submittingComp, setSubmittingComp] = useState(false);
 
-  // New Comp Form
   const [compForm, setCompForm] = useState({
     eventId: '',
     competitionName: '',
@@ -151,7 +149,6 @@ export default function Competitions() {
 
   return (
     <div className="space-y-6 animate-fadeIn">
-      {/* Editorial Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-surface-border">
         <div>
           <div className="flex items-center gap-2 mb-2">
@@ -205,7 +202,6 @@ export default function Competitions() {
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left: Competition Selector List */}
           <div className="space-y-3">
             <h3 className="font-mono text-2xs uppercase tracking-widest text-ink-muted font-bold">
               Available Contests ({competitions.length})
@@ -237,13 +233,11 @@ export default function Competitions() {
             </div>
           </div>
 
-          {/* Right: Competition Deep-Dive */}
           <div className="lg:col-span-2 space-y-5">
             {detailsLoading || !compDetails ? (
               <LoadingSpinner message="Reconciling tournament standings..." />
             ) : (
               <>
-                {/* Header Card */}
                 <div className="bg-surface-primary rounded-xl border border-surface-border p-6 shadow-subtle">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-surface-border">
                     <div>
@@ -286,7 +280,6 @@ export default function Competitions() {
                   )}
                 </div>
 
-                {/* Prizes and Announced Results Podium */}
                 {compDetails.prizes && compDetails.prizes.length > 0 && (
                   <div className="bg-surface-primary rounded-xl border border-surface-border p-6 shadow-subtle">
                     <div className="flex items-center gap-2 mb-4 pb-3 border-b border-surface-border">
@@ -306,7 +299,6 @@ export default function Competitions() {
                       ))}
                     </div>
 
-                    {/* Published Results */}
                     {compDetails.results && compDetails.results.length > 0 && (
                       <div className="mt-5 pt-4 border-t border-surface-border">
                         <p className="text-xs font-semibold text-ink-primary mb-3 flex items-center gap-1.5">
@@ -333,7 +325,6 @@ export default function Competitions() {
                   </div>
                 )}
 
-                {/* Teams Registered */}
                 <div className="bg-surface-primary rounded-xl border border-surface-border p-6 shadow-subtle">
                   <div className="flex items-center justify-between mb-4 pb-3 border-b border-surface-border">
                     <h3 className="font-display font-bold text-base text-ink-primary flex items-center gap-2">
@@ -361,7 +352,6 @@ export default function Competitions() {
                   )}
                 </div>
 
-                {/* Criteria and Judges */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="bg-surface-primary rounded-xl border border-surface-border p-5 shadow-subtle">
                     <h4 className="font-mono text-2xs uppercase tracking-wider text-ink-muted font-bold mb-3">
@@ -400,7 +390,6 @@ export default function Competitions() {
         </div>
       )}
 
-      {/* Team Registration Modal */}
       <Modal isOpen={isTeamModalOpen} onClose={() => setIsTeamModalOpen(false)} title="Register Squad for Competition">
         <form onSubmit={handleRegisterTeam} className="space-y-4">
           <div>
@@ -436,7 +425,6 @@ export default function Competitions() {
         </form>
       </Modal>
 
-      {/* Create Competition Modal */}
       <Modal isOpen={isCompModalOpen} onClose={() => setIsCompModalOpen(false)} title="Schedule New Tournament">
         <form onSubmit={handleCreateComp} className="space-y-4">
           <div>
