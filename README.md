@@ -197,42 +197,7 @@ Detailed schema definitions, constraints, and aggregation queries are documented
 
 ---
 
-## 11. Screenshots and Summary of Implemented Features
-
-Visual proof of the running application is organized in the [`screenshots/`](./screenshots/) directory.
-
-### Visual Documentation Checklist & TODO
-
-Since image binaries are pending capture, refer to the following capture checklist:
-
-- [ ] `screenshots/application/login_role_selection.png`: Login portal showing 4-role 1-click quick-fill buttons.
-- [ ] `screenshots/application/student_event_discovery.png`: Student event catalog with category filtering and search.
-- [ ] `screenshots/application/student_event_details.png`: Event detail profile with seat availability, schedule, and venue details.
-- [ ] `screenshots/application/student_digital_passes.png`: Student e-ticket pass wallet with QR tokens.
-- [ ] `screenshots/application/organizer_my_clubs.png`: Organizer "My Clubs" section and campus clubs directory.
-- [ ] `screenshots/application/organizer_event_management.png`: Organizer dashboard with club-scoped event scheduling.
-- [ ] `screenshots/application/organizer_event_finances.png`: Financial ledger with dynamic net profit calculation.
-- [ ] `screenshots/application/faculty_dashboard.png`: Faculty coordinator dashboard with supervised clubs.
-- [ ] `screenshots/application/faculty_club_management.png`: Dedicated club console (`/manage/club/:id`).
-- [ ] `screenshots/application/faculty_assign_organizer.png`: Faculty modal for appointing student organizers.
-- [ ] `screenshots/application/admin_faculty_management.png`: Admin faculty account provisioning console.
-- [ ] `screenshots/application/competitions_leaderboard.png`: Hackathon contest page with live judge scores and leaderboard.
-- [ ] `screenshots/application/certificate_verification.png`: Tamper-proof certificate verification portal.
-- [ ] `screenshots/database/atlas_cluster_overview.png`: MongoDB Atlas cloud deployment overview (credentials masked).
-- [ ] `screenshots/database/atlas_collections_roster.png`: 18 collections visible in MongoDB Atlas / Compass.
-- [ ] `screenshots/database/atlas_document_inspector.png`: Normalized document inspection.
-- [ ] `screenshots/database/atlas_compound_indexes.png`: Index explorer showing unique compound index `{ user: 1, event: 1 }`.
-- [ ] `screenshots/testing/backend_test_results.png`: Terminal output of `tests/runServerTest.js` (14/14 Modules PASSED).
-- [ ] `screenshots/testing/faculty_hierarchy_test_results.png`: Terminal output of `tests/faculty_and_clubs.test.js` (22/22 PASSED).
-- [ ] `screenshots/testing/permissions_test_results.png`: Terminal output of `tests/permissions.test.js` (17/17 PASSED).
-- [ ] `screenshots/testing/master_test_runner_results.png`: Terminal output of `tests/run_all.js` (53/53 PASSED).
-- [ ] `screenshots/testing/frontend_build_results.png`: Terminal output of `npm run build --prefix client` (0 errors).
-
-*Detailed screenshot capturing instructions are available in [`screenshots/README.md`](./screenshots/README.md).*
-
----
-
-## 12. Test Instructions and Known Limitations
+## 11. Test Instructions and Known Limitations
 
 FestFlow includes automated end-to-end integration and permission test suites that execute directly against the live MongoDB Atlas cluster.
 
@@ -279,13 +244,13 @@ In the spirit of academic transparency, the following items represent planned en
 
 ---
 
-## 13. YouTube Demonstration Video Link
+## 12. YouTube Demonstration Video Link
 
 A complete screen recording and feature walkthrough demonstrating student event registration, faculty organizer assignment, organizer event scheduling, and public certificate verification is available below:
 
 ---
 
-## 14. Repository Documentation Index
+## 13. Repository Documentation Index
 
 - [`environment_instructions.md`](./environment_instructions.md) — Comprehensive execution and environment setup guide.
 - [`database/`](./database/) — Schema specifications, collection directory, sample data, and aggregation queries.
