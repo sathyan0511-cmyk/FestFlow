@@ -246,8 +246,6 @@ In the spirit of academic transparency, the following items represent planned en
 
 ## 12. YouTube Demonstration Video Link
 
-A complete screen recording and feature walkthrough demonstrating student event registration, faculty organizer assignment, organizer event scheduling, and public certificate verification is available below:
-
 ---
 
 ## 13. Repository Documentation Index
