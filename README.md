@@ -21,7 +21,7 @@ FestFlow addresses these challenges through a centralized, cloud-backed architec
 
 FestFlow is a full-stack college event management platform built to streamline event coordination, club administration, attendee ticketing, and financial ledger tracking across university departments. Traditional collegiate event workflows face challenges with multi-club permission overlap, venue scheduling conflicts, double registrations, and unverified credentials. FestFlow solves this by implementing a structured four-tier role hierarchy (Admin, Faculty, Organizer, and Student) with strict server-side boundary enforcement. Students can discover fests, register for events with unique digital passes, and verify certificates. Faculty coordinators supervise clubs and appoint student organizers, while organizers manage club-scoped events and finances without cross-club data leakage. Built on React 18, Vite, Tailwind CSS, Node.js, and Express, FestFlow connects to a cloud-hosted MongoDB Atlas database modeled with Mongoose ODM under strict third normal form principles, deriving profits, seat availability, and catering costs dynamically without data redundancy.
 
-*(Word count: 134 words)*
+
 
 ---
 
@@ -187,35 +187,6 @@ The database includes pre-configured demo accounts for academic evaluation:
 
 ## 10. Description of Database Tables/Collections, Relationships, and Sample Data
 
-FestFlow manages **18 MongoDB collections** structured according to database normalization rules:
-
-### Entity Relationship Diagram (Mermaid ER)
-
-```mermaid
-erDiagram
-    USER ||--o{ REGISTRATION : places
-    USER ||--o{ CLUB_MEMBERSHIP : holds
-    USER ||--o{ EVENT : creates
-    USER ||--o{ FEEDBACK : submits
-    USER ||--o{ CERTIFICATE : receives
-    CLUB ||--o{ EVENT : organizes
-    CLUB ||--o{ CLUB_MEMBERSHIP : has
-    CLUB }o--|| USER : "supervised by faculty"
-    VENUE ||--o{ EVENT : hosts
-    EVENT ||--o{ REGISTRATION : receives
-    EVENT ||--o{ EXPENSE : incurs
-    EVENT ||--o{ REVENUE : generates
-    EVENT ||--o{ BUDGET : has
-    EVENT ||--o{ CATERING : books
-    EVENT ||--o{ COMPETITION : conducts
-    EVENT ||--o{ EVENT_SPONSOR : receives
-    REGISTRATION ||--o| PAYMENT : pays
-    COMPETITION ||--o{ TEAM : registers
-    COMPETITION ||--o{ JUDGE_SCORE : evaluates
-    COMPETITION ||--o{ RESULT : announces
-    SPONSOR ||--o{ EVENT_SPONSOR : funds
-```
-
 ### Detailed Collection Specifications
 Detailed schema definitions, constraints, and aggregation queries are documented in the [`database/`](./database/) directory:
 - [`database/README.md`](./database/README.md) — Architecture & Mongoose conventions.
@@ -297,8 +268,6 @@ MASTER TEST SUMMARY: 53 / 53 TESTS PASSED (100% SUCCESS)
 ========================================================================================
 ```
 
-*Full testing specifications and runner guides are documented in [`tests/README.md`](./tests/README.md).*
-
 ---
 
 ### Known Limitations
@@ -313,9 +282,6 @@ In the spirit of academic transparency, the following items represent planned en
 ## 13. YouTube Demonstration Video Link
 
 A complete screen recording and feature walkthrough demonstrating student event registration, faculty organizer assignment, organizer event scheduling, and public certificate verification is available below:
-
-> **Demonstration Video Link**:
-> `[Add YouTube demonstration link after uploading the video]`
 
 ---
 
