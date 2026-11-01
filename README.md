@@ -29,9 +29,9 @@ FestFlow is a full-stack college event management platform built to streamline e
 
 | S. No. | Team Member Name | Register Number | Role or Contribution |
 | :---: | :--- | :--- | :--- |
-| 1 | S.Sathyan | 25BCE1683 | Full-Stack Development, System Architecture & Database Design |
-| 2 | S.Sarvesh | 25BCE1702 | Frontend UI/UX, Component Styling & Documentation |
-| 3 | N.Sriram | 25BCE1619 | Backend API Development & Automated Test Suites |
+| 1 | S.Sathyan | 25BCE1683 | Frontend & UI |
+| 2 | S.Sarvesh | 25BCE1702 | Backend & API Development |
+| 3 | N.Sriram | 25BCE1619 | Database Design, Security & Testing |
 
 
 ---
