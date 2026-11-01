@@ -36,6 +36,17 @@ const processPayment = async (req, res, next) => {
       });
     }
 
+    // Safety & Financial Integrity Guard (Workstream 4):
+    // For paid events (amount > 0), online payment methods require external provider verification.
+    // Never falsely report an online payment as completed when offline or without gateway verification.
+    const isOnlineMethod = ['upi', 'card', 'netbanking', 'online'].includes(paymentMethod.toLowerCase());
+    if (amount > 0 && isOnlineMethod) {
+      return res.status(503).json({
+        success: false,
+        message: 'Online payment gateways require active internet connectivity and external provider verification. Please connect to the internet or pay via on-desk cash/offline registration.'
+      });
+    }
+
     const transactionId = `TXN-${Date.now().toString(36).toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`;
 
     const payment = await Payment.create({

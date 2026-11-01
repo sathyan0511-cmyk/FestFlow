@@ -23,8 +23,12 @@ export const AuthProvider = ({ children }) => {
             localStorage.setItem('festflow_user', JSON.stringify(res.data.user));
           }
         } catch (error) {
-          console.error('Session expired or invalid:', error.message);
-          logout();
+          if (error.response?.status === 401) {
+            console.error('Session expired or invalid (401):', error.message);
+            logout();
+          } else {
+            console.warn('Backend/network temporarily unavailable; preserving offline authenticated session.');
+          }
         }
       }
       setLoading(false);

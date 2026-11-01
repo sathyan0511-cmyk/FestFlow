@@ -29,9 +29,13 @@ const {
 
 const seedAdditional = async () => {
   try {
-    const mongoUri = process.env.MONGODB_URI;
+    const mongoUri = process.env.LOCAL_MONGODB_URI || 'mongodb://127.0.0.1:27017/festflow';
+    if (mongoUri.includes('mongodb.net') || mongoUri.includes('mongodb+srv://')) {
+      console.error('⛔ SAFETY ABORT: Refusing to run seed script against MongoDB Atlas!');
+      process.exit(1);
+    }
     await mongoose.connect(mongoUri);
-    console.log('🌱 Connected to MongoDB Atlas to initialize advanced modules...');
+    console.log('🌱 Connected to Local MongoDB to initialize advanced modules...');
 
     // Fetch existing entities
     const student = await User.findOne({ email: 'student@festflow.edu' });
@@ -61,7 +65,9 @@ const seedAdditional = async () => {
 
     // 2. Payment (for registration)
     if (registration) {
-      const existingPayment = await Payment.findOne({ registration: registration._id });
+      const existingPayment = await Payment.findOne({
+        $or: [{ registration: registration._id }, { transactionId: 'TXN-INIT-2026-UPI99' }]
+      });
       if (!existingPayment) {
         await Payment.create({
           registration: registration._id,

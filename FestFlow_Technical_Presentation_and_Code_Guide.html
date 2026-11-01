@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>FestFlow — Full-Stack College Event Management System</title>
+<style>
+  @page {
+    size: A4;
+    margin: 18mm 16mm 18mm 16mm;
+    @bottom-right {
+      content: counter(page);
+    }
+  }
+
+  * {
+    box-sizing: border-box;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body {
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+    color: #1f2937;
+    background-color: #ffffff;
+    line-height: 1.5;
+    font-size: 10pt;
+    margin: 0;
+    padding: 0;
+  }
+
+  .cover-header {
+    text-align: center;
+    padding-bottom: 20px;
+    margin-bottom: 25px;
+    border-bottom: 3px solid #1e3a8a;
+  }
+
+  .cover-title {
+    font-size: 24pt;
+    font-weight: 800;
+    color: #1e3a8a;
+    margin: 0 0 6px 0;
+    letter-spacing: -0.5px;
+  }
+
+  .cover-subtitle {
+    font-size: 11.5pt;
+    color: #475569;
+    margin: 0 0 12px 0;
+    font-weight: 500;
+  }
+
+  .cover-meta {
+    display: inline-block;
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 6px 16px;
+    font-size: 8.5pt;
+    font-family: 'Consolas', monospace;
+    color: #334155;
+  }
+
+  h1 {
+    font-size: 15pt;
+    font-weight: 700;
+    color: #1e3a8a;
+    margin: 22px 0 10px 0;
+    padding-bottom: 4px;
+    border-bottom: 1.5px solid #e2e8f0;
+    page-break-after: avoid;
+  }
+
+  h2 {
+    font-size: 12pt;
+    font-weight: 700;
+    color: #0d9488;
+    margin: 16px 0 6px 0;
+    page-break-after: avoid;
+  }
+
+  h3 {
+    font-size: 10.5pt;
+    font-weight: 600;
+    color: #334155;
+    margin: 12px 0 4px 0;
+    page-break-after: avoid;
+  }
+
+  p {
+    margin: 0 0 8px 0;
+    text-align: justify;
+  }
+
+  ul, ol {
+    margin: 0 0 10px 0;
+    padding-left: 20px;
+  }
+
+  li {
+    margin-bottom: 4px;
+  }
+
+  .table-container {
+    margin: 10px 0 14px 0;
+    page-break-inside: avoid;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 8.5pt;
+    background-color: #ffffff;
+  }
+
+  th, td {
+    padding: 7px 10px;
+    border: 1px solid #cbd5e1;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  th {
+    background-color: #1e3a8a;
+    color: #ffffff;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+  }
+
+  tr:nth-child(even) td {
+    background-color: #f8fafc;
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-size: 7.5pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-family: 'Consolas', monospace;
+  }
+
+  .badge-admin { background: #f3eefa; color: #4a4157; border: 1px solid #d4c5e6; }
+  .badge-faculty { background: #fdf5ee; color: #664d35; border: 1px solid #edd5be; }
+  .badge-organizer { background: #e8f1fc; color: #21344d; border: 1px solid #bfdbfe; }
+  .badge-student { background: #e7f6f0; color: #1e3e34; border: 1px solid #a7f3d0; }
+
+  .callout {
+    background-color: #f0fdf4;
+    border-left: 4px solid #0d9488;
+    border-top: 1px solid #e2e8f0;
+    border-right: 1px solid #e2e8f0;
+    border-bottom: 1px solid #e2e8f0;
+    border-radius: 4px;
+    padding: 10px 14px;
+    margin: 12px 0 14px 0;
+    page-break-inside: avoid;
+  }
+
+  .callout-title {
+    font-weight: 700;
+    font-size: 9.5pt;
+    color: #0d9488;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .callout-body {
+    font-size: 8.5pt;
+    color: #1e293b;
+    margin: 0;
+  }
+
+  .code-box {
+    background-color: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-left: 4px solid #1e3a8a;
+    border-radius: 4px;
+    padding: 10px 12px;
+    margin: 10px 0 14px 0;
+    page-break-inside: avoid;
+    font-family: 'Consolas', monospace;
+  }
+
+  .code-header {
+    font-size: 8pt;
+    font-weight: 700;
+    color: #1e3a8a;
+    margin-bottom: 6px;
+    border-bottom: 1px dashed #cbd5e1;
+    padding-bottom: 4px;
+  }
+
+  .code-content {
+    font-size: 8pt;
+    color: #0f172a;
+    white-space: pre-wrap;
+    word-break: break-all;
+    line-height: 1.4;
+    margin: 0;
+  }
+
+  .code-explanation {
+    margin-top: 6px;
+    padding-top: 4px;
+    border-top: 1px dashed #cbd5e1;
+    font-size: 8pt;
+    font-family: 'Segoe UI', sans-serif;
+    color: #334155;
+  }
+
+  .code-explanation strong {
+    color: #0d9488;
+  }
+
+  .page-break {
+    page-break-before: always;
+  }
+
+  .viva-card {
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 10px 14px;
+    margin-bottom: 10px;
+    page-break-inside: avoid;
+  }
+
+  .viva-question {
+    font-weight: 700;
+    color: #1e3a8a;
+    font-size: 9pt;
+    margin-bottom: 4px;
+  }
+
+  .viva-answer {
+    font-size: 8.5pt;
+    color: #334155;
+    margin: 0;
+  }
+
+  .viva-answer strong {
+    color: #0d9488;
+  }
+</style>
+</head>
+<body>
+
+<div class="cover-header">
+  <div class="cover-title">FestFlow — College Event Management System</div>
+  <div class="cover-subtitle">Complete A-to-Z Technical Architecture, Codebase Walkthrough & Faculty Presentation Defense Dossier</div>
+  <div class="cover-meta">
+    Academic Session 2025–2026 • Full-Stack DBMS Capstone • React 18, Node.js, Express, MongoDB Atlas, 3NF SQL Equivalent
+  </div>
+</div>
+
+<div class="callout">
+  <div class="callout-title">📌 Purpose of this Technical Guide for Your Presentation</div>
+  <p class="callout-body">
+    This document contains every technical detail, architectural rationale, code walkthrough, and defense answer needed to present FestFlow to your college teacher.
+    It links every single feature to its exact source code file and explains what language is used for what part, so you can confidently answer any question during your oral evaluation.
+  </p>
+</div>
+
+<!-- ========================================================================= -->
+<h1>1. Executive Summary & Problem Statement</h1>
+<!-- ========================================================================= -->
+
+<p>
+  <strong>The Problem:</strong> Higher education institutions conduct hundreds of technical symposiums, hackathons, cultural festivals, sports tournaments, and workshops every year. 
+  In traditional campus administration, event management is fragmented across physical noticeboards, WhatsApp groups, printed paper entry passes, manual cash collections, and un-normalized spreadsheets.
+</p>
+
+<p>
+  <strong>Administrative Bottlenecks Observed in Colleges:</strong>
+</p>
+<ul>
+  <li><strong>Lack of Real-Time Audit Visibility:</strong> Faculty advisors and deans have no centralized, live view into student participation, approved budgets, vendor expenses, or event balance sheets.</li>
+  <li><strong>Unrestricted Organizer Permissions:</strong> When basic systems give student organizers universal access, organizers can accidentally edit, reschedule, or delete events belonging to rival student clubs.</li>
+  <li><strong>Overbooking & Venue Conflicts:</strong> Multiple clubs frequently schedule events in the same college auditorium at the same time, or admit 800 students into a 300-seat hall, violating safety limits.</li>
+  <li><strong>Financial Accounting Violations:</strong> Event accounts suffer from untracked cash collections, missing vendor receipts, and redundant calculations that violate basic database normalization principles (3NF).</li>
+  <li><strong>Certificate Forgery:</strong> Paper certificates can be easily falsified, and manual signature collection causes delays of weeks after festival completion.</li>
+</ul>
+
+<p>
+  <strong>The FestFlow Solution:</strong> FestFlow is a full-stack, cloud-hosted college event management platform built on role-based access control (RBAC), multi-club scoped organizer permissions, automated ledger reconciliations, live venue capacity enforcement, and tamper-resistant digital certificates.
+</p>
+
+<!-- ========================================================================= -->
+<h1>2. Languages & Technologies Breakdown (What Language is Used for What)</h1>
+<!-- ========================================================================= -->
+
+<p>
+  When presenting your project, teachers will ask: <em>"What programming language is used for which tier of the application, and why did you choose it?"</em> 
+  Use the table below to explain the technology stack:
+</p>
+
+<div class="table-container">
+<table>
+  <thead>
+    <tr>
+      <th style="width: 14%;">Tier / Layer</th>
+      <th style="width: 18%;">Language / Dialect</th>
+      <th style="width: 18%;">Framework / Library</th>
+      <th style="width: 25%;">Specific Role in FestFlow</th>
+      <th style="width: 25%;">Why This Language Was Chosen</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Frontend UI</strong></td>
+      <td>JavaScript (ES6+), JSX, HTML5</td>
+      <td>React 18.2, Vite 6.4</td>
+      <td>Renders client-side views, reactive metric cards, dynamic modals, and interactive event passes.</td>
+      <td>Component-based architecture allows modular reuse (badges, stat cards, tables) with instant hot-module replacement and client-side routing.</td>
+    </tr>
+    <tr>
+      <td><strong>Frontend Styling</strong></td>
+      <td>CSS3, Utility Classes</td>
+      <td>Tailwind CSS 3.4</td>
+      <td>Responsive layouts, custom color variables, dark brand sidebar, print styles, and animation transitions.</td>
+      <td>Utility-first CSS compilation purges unused rules, resulting in a tiny ~38 KB production stylesheet with zero runtime overhead.</td>
+    </tr>
+    <tr>
+      <td><strong>Backend API</strong></td>
+      <td>JavaScript (Node.js)</td>
+      <td>Express.js 4.18</td>
+      <td>RESTful routing, JWT authentication middleware, authorization checks, and CRUD controllers.</td>
+      <td>Asynchronous, non-blocking single-threaded event loop handles high-concurrency student ticket requests without thread deadlock.</td>
+    </tr>
+    <tr>
+      <td><strong>Database ODM</strong></td>
+      <td>JavaScript (Node.js)</td>
+      <td>Mongoose 8.2</td>
+      <td>Data modeling, schema validation, foreign key references (<code>ObjectId</code>), compound indexes, and virtual getters.</td>
+      <td>Enforces strict schema discipline, relationship constraints, and data integrity on top of a flexible document database.</td>
+    </tr>
+    <tr>
+      <td><strong>Database Engine</strong></td>
+      <td>BSON / JSON Document Store</td>
+      <td>MongoDB Atlas Cluster</td>
+      <td>Cloud database persisting all collections (Users, Clubs, Events, Venues, Finances, Registrations, etc.).</td>
+      <td>Cloud-native availability, zero installation friction for grading, native JSON structure matching React state, and high read/write throughput.</td>
+    </tr>
+    <tr>
+      <td><strong>Relational Model</strong></td>
+      <td>ANSI SQL (DDL / DML)</td>
+      <td>schema.sql, sample_data.sql</td>
+      <td>DBMS syllabus compliance; proves 3NF normalization, foreign key cascading, and relational equivalence.</td>
+      <td>Demonstrates that our MongoDB data model adheres directly to classical relational database normalization theory.</td>
+    </tr>
+    <tr>
+      <td><strong>Automated Tests</strong></td>
+      <td>JavaScript (Node.js)</td>
+      <td>child_process, Node HTTP</td>
+      <td>Executes 53 automated integration assertions across 3 test suites directly against the live database cluster.</td>
+      <td>Deterministic execution with zero third-party testing dependencies; runs cleanly on any Windows, macOS, or Linux machine.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<!-- ========================================================================= -->
+<div class="page-break"></div>
+<h1>3. System Architecture & Repository File Map</h1>
+<!-- ========================================================================= -->
+
+<p>
+  FestFlow uses a 3-tier Client-Server-Database architecture. The diagram below explains the lifecycle of a user request from browser to cloud database:
+</p>
+
+<div class="callout">
+  <div class="callout-title">🔄 Full Request/Response Flow (e.g. Reserving an Event Attendance Pass)</div>
+  <p class="callout-body">
+    <strong>1. Client Action:</strong> A student clicks "Reserve Attendance Pass" in <code>client/src/pages/EventDetail.jsx</code>.<br>
+    <strong>2. Axios Interceptor:</strong> <code>client/src/api/client.js</code> attaches <code>Authorization: Bearer &lt;token&gt;</code> from <code>localStorage</code>.<br>
+    <strong>3. Express Route:</strong> The request hits <code>POST /api/registrations</code> defined in <code>server/src/routes/registrationRoutes.js</code>.<br>
+    <strong>4. Auth Middleware:</strong> <code>server/src/middleware/auth.js</code> decrypts the JWT token, verifies validity, and populates <code>req.user</code>.<br>
+    <strong>5. Controller Logic:</strong> <code>server/src/controllers/registrationController.js</code> checks venue seating capacity, duplicate RSVP, and deadline.<br>
+    <strong>6. Database Write:</strong> Mongoose creates a record in the <code>registrations</code> collection on MongoDB Atlas and increments <code>registeredCount</code>.<br>
+    <strong>7. JSON Response:</strong> Server sends back HTTP 201 with the newly minted pass number (<code>ticketNumber: "FF-B8491A"</code>).<br>
+    <strong>8. React State Update:</strong> The UI instantly re-renders to display the confirmed green ticket stub with QR code styling.
+  </p>
+</div>
+
+<p><strong>Where Files Live in the Repository:</strong></p>
+
+<div class="table-container">
+<table>
+  <thead>
+    <tr>
+      <th style="width: 25%;">File Path</th>
+      <th style="width: 12%;">Language</th>
+      <th style="width: 63%;">Key Functional Purpose</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>client/src/App.jsx</code></td>
+      <td>JSX / React</td>
+      <td>Root router configuration, public auth routes (Login/Register), and protected dashboard route wrappers.</td>
+    </tr>
+    <tr>
+      <td><code>client/src/api/client.js</code></td>
+      <td>JavaScript</td>
+      <td>Axios HTTP client with automatic Bearer token injection and global 401 session expiration handling.</td>
+    </tr>
+    <tr>
+      <td><code>client/src/context/AuthContext.jsx</code></td>
+      <td>JSX / React</td>
+      <td>Global authentication state provider managing user profile, login, logout, and token synchronization.</td>
+    </tr>
+    <tr>
+      <td><code>client/src/pages/Dashboard.jsx</code></td>
+      <td>JSX / React</td>
+      <td>Role-aware home dashboard displaying KPI metric cards, supervised clubs, upcoming events, and live feed.</td>
+    </tr>
+    <tr>
+      <td><code>client/src/pages/ClubManage.jsx</code></td>
+      <td>JSX / React</td>
+      <td>Detailed club dossier with tabbed organizer appointments, membership roster, and upcoming/past events.</td>
+    </tr>
+    <tr>
+      <td><code>client/src/pages/FacultyOrganizers.jsx</code></td>
+      <td>JSX / React</td>
+      <td>Faculty governance portal to appoint/revoke student organizers across assigned supervised clubs.</td>
+    </tr>
+    <tr>
+      <td><code>client/src/pages/AdminFaculty.jsx</code></td>
+      <td>JSX / React</td>
+      <td>Admin management portal to provision faculty accounts and assign supervised club mandates.</td>
+    </tr>
+    <tr>
+      <td><code>client/src/pages/FinanceDashboard.jsx</code></td>
+      <td>JSX / React</td>
+      <td>3NF event treasury tracking approved budgets, expenditure vouchers, and revenue credits.</td>
+    </tr>
+    <tr>
+      <td><code>client/src/pages/Competitions.jsx</code></td>
+      <td>JSX / React</td>
+      <td>Tournament arena managing team registrations, jury scoring criteria, and podium prize announcements.</td>
+    </tr>
+    <tr>
+      <td><code>client/src/pages/Certificates.jsx</code></td>
+      <td>JSX / React</td>
+      <td>Student credential vault and public verification portal for real-time authenticity validation.</td>
+    </tr>
+    <tr>
+      <td><code>client/src/pages/EventDetail.jsx</code></td>
+      <td>JSX / React</td>
+      <td>Master festival dossier with parallel sub-modules (catering, sponsors, volunteers, feedback).</td>
+    </tr>
+    <tr>
+      <td><code>server/src/server.js</code></td>
+      <td>JavaScript</td>
+      <td>Express server bootstrapper, CORS origin validator, API route mounter, and MongoDB connector.</td>
+    </tr>
+    <tr>
+      <td><code>server/src/utils/clubAuthorization.js</code></td>
+      <td>JavaScript</td>
+      <td>Core security utility ensuring organizers and faculty only manipulate events in their authorized clubs.</td>
+    </tr>
+    <tr>
+      <td><code>server/src/controllers/clubController.js</code></td>
+      <td>JavaScript</td>
+      <td>Club creation, organizer appointment, automatic promotion/demotion, and membership endpoints.</td>
+    </tr>
+    <tr>
+      <td><code>server/src/controllers/eventController.js</code></td>
+      <td>JavaScript</td>
+      <td>Event scheduling, venue capacity constraint checks, status transitions, and deletion protection.</td>
+    </tr>
+    <tr>
+      <td><code>server/src/controllers/financeController.js</code></td>
+      <td>JavaScript</td>
+      <td>Ledger management with on-the-fly dynamic derivation of total expenditure and net profit.</td>
+    </tr>
+    <tr>
+      <td><code>database/schema.sql</code></td>
+      <td>ANSI SQL</td>
+      <td>Relational DDL table definitions providing standard relational database equivalence.</td>
+    </tr>
+    <tr>
+      <td><code>tests/run_all.js</code></td>
+      <td>JavaScript</td>
+      <td>Master test runner orchestrating all 53 integration assertions across the live cluster.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<!-- ========================================================================= -->
+<h1>4. User Roles & Permission Matrix</h1>
+<!-- ========================================================================= -->
+
+<div class="table-container">
+<table>
+  <thead>
+    <tr>
+      <th style="width: 14%;">User Role</th>
+      <th style="width: 18%;">Permission Scope</th>
+      <th style="width: 28%;">Typical College User</th>
+      <th style="width: 40%;">Key Capabilities & Restrictions</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><span class="badge badge-student">Student</span></td>
+      <td>Personal & Discovery</td>
+      <td>Enrolled undergraduate / postgraduate students</td>
+      <td>Can discover events, claim attendance passes, join clubs, submit volunteer applications, compete in hackathons, and verify certificates. <em>Strictly forbidden from creating events or editing finances.</em></td>
+    </tr>
+    <tr>
+      <td><span class="badge badge-organizer">Organizer</span></td>
+      <td><strong>Club-Scoped</strong></td>
+      <td>Appointed student club heads / secretaries</td>
+      <td>Can create/edit/delete events, record expenses/revenues, and manage attendees <strong>strictly for their assigned clubs</strong>. Outside their assigned clubs, they behave exactly as normal students.</td>
+    </tr>
+    <tr>
+      <td><span class="badge badge-faculty">Faculty</span></td>
+      <td>Supervised Clubs</td>
+      <td>Department professors & designated club advisors</td>
+      <td>Supervises assigned clubs, appoints student organizers, revokes organizer status, inspects event balance sheets, and audits club activities.</td>
+    </tr>
+    <tr>
+      <td><span class="badge badge-admin">Admin</span></td>
+      <td>Universal Campus</td>
+      <td>Dean of Student Affairs / Principal</td>
+      <td>Universal campus authority. Can charter clubs, provision faculty accounts, configure campus venues, and override any event across the university.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="code-box">
+  <div class="code-header">📁 server/src/controllers/clubController.js — Automatic Role Promotion & Demotion</div>
+  <div class="code-content">// If faculty revokes organizer status from a club, check if they manage other clubs.
+// Automatically demote user back to 'student' if no authorized clubs remain:
+const remainingClubs = await Club.countDocuments({ organizers: studentId });
+if (remainingClubs === 0 && student.role === 'organizer') {
+  student.role = 'student';
+  student.authorizedClubs = [];
+  await student.save();
+}</div>
+  <div class="code-explanation">
+    <strong>Key Takeaway for Faculty:</strong> This proves defensive role lifecycle engineering. When a student organizer graduates or is revoked from their final club, they are automatically safely demoted to 'student' with zero data loss. Their personal registrations and historical passes remain intact.
+  </div>
+</div>
+
+<!-- ========================================================================= -->
+<div class="page-break"></div>
+<h1>5. Code Walkthrough: All 14 Functional Modules (A to Z)</h1>
+<!-- ========================================================================= -->
+
+<p>
+  This section walks through the exact code implementation for all 14 backend and frontend modules. 
+  When the teacher asks: <em>"Where is this implemented in the code?"</em>, refer directly to these file paths and code snippets:
+</p>
+
+<!-- Module 1 -->
+<h2>Module 1: Authentication & Session Management</h2>
+<p>
+  <strong>Purpose:</strong> Secures user access using Bcryptjs password hashing (10 salt rounds) and signed JSON Web Tokens (JWT). 
+  Tokens are stored in client localStorage and verified via an Express middleware pipeline.
+</p>
+<div class="code-box">
+  <div class="code-header">📁 server/src/controllers/authController.js (Lines 10–25) & client/src/api/client.js</div>
+  <div class="code-content">// Backend: Issue signed JWT upon login
+const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '30d' });
+res.status(200).json({ success: true, token, user });
+
+// Frontend: Axios interceptor attaches Bearer token automatically
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('festflow_token');
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});</div>
+  <div class="code-explanation">
+    <strong>Teacher Viva Question:</strong> <em>"Why use JWT instead of sessions?"</em><br>
+    <strong>Answer:</strong> JWT tokens are stateless. The server does not need an in-memory session store; the token is cryptographically signed and self-contained, allowing effortless horizontal scaling.
+  </div>
+</div>
+
+<!-- Module 2 -->
+<h2>Module 2: Club Governance & Referential Deletion Protection</h2>
+<p>
+  <strong>Purpose:</strong> Manages student societies. Prevents relational integrity anomalies by blocking club deletion if scheduled events exist in the database.
+</p>
+<div class="code-box">
+  <div class="code-header">📁 server/src/controllers/clubController.js (Lines 140–155)</div>
+  <div class="code-content">// Prevent deleting club if events are currently linked to it (Foreign Key Integrity)
+const eventCount = await Event.countDocuments({ club: id });
+if (eventCount > 0) {
+  return res.status(400).json({ success: false, message: 'Cannot dissolve club with active scheduled events.' });
+}
+await Club.findByIdAndDelete(id);</div>
+  <div class="code-explanation">
+    <strong>Teacher Viva Question:</strong> <em>"How do you enforce referential integrity without SQL foreign key cascading?"</em><br>
+    <strong>Answer:</strong> Through defensive pre-deletion hooks in the controller. We count dependent documents before issuing a delete command.
+  </div>
+</div>
+
+<!-- Module 3 -->
+<h2>Module 3: Faculty Supervision & Organizer Delegation</h2>
+<p>
+  <strong>Purpose:</strong> Allows administrators to assign faculty advisors to clubs, and allows faculty advisors to promote qualified students to organizers using real-time debounced search.
+</p>
+<div class="code-box">
+  <div class="code-header">📁 server/src/controllers/facultyController.js & client/src/pages/FacultyOrganizers.jsx</div>
+  <div class="code-content">// Update supervised clubs assigned to a faculty coordinator
+await Club.updateMany({ facultyCoordinator: faculty._id }, { $unset: { facultyCoordinator: "" } });
+await Club.updateMany({ _id: { $in: assignedClubIds } }, { facultyCoordinator: faculty._id });</div>
+  <div class="code-explanation">
+    <strong>Teacher Viva Question:</strong> <em>"Can a faculty member assign an organizer to a club they don't supervise?"</em><br>
+    <strong>Answer:</strong> No. <code>clubAuthorization.js</code> checks whether <code>req.user.role === 'admin'</code> OR if the faculty member's ID matches the club's <code>facultyCoordinator</code> field.
+  </div>
+</div>
+
+<!-- Module 4 -->
+<h2>Module 4: Event Scheduling & Venue Seating Constraint</h2>
+<p>
+  <strong>Purpose:</strong> Enables authorized organizers to schedule festivals while enforcing campus safety limits: attendance capacity cannot exceed the physical capacity of the chosen venue.
+</p>
+<div class="code-box">
+  <div class="code-header">📁 client/src/pages/CreateEvent.jsx (Line 102) & server/src/controllers/eventController.js</div>
+  <div class="code-content">// Capacity validation against physical venue capacity
+const selectedVenue = venues.find((v) => v._id === formData.venue);
+if (selectedVenue && Number(formData.maxParticipants) > selectedVenue.capacity) {
+  setError(`Max participants cannot exceed ${selectedVenue.name} capacity (${selectedVenue.capacity}).`);
+  return;
+}</div>
+  <div class="code-explanation">
+    <strong>Teacher Viva Question:</strong> <em>"Where is capacity validation enforced?"</em><br>
+    <strong>Answer:</strong> On both frontend (immediate UI validation in CreateEvent.jsx) and backend (controller validation in eventController.js).
+  </div>
+</div>
+
+<!-- Module 5 -->
+<h2>Module 5: Campus Venues & Facilities Logistics</h2>
+<p>
+  <strong>Purpose:</strong> Catalogs auditoriums, labs, and grounds with seating limits and equipped amenities (sound consoles, projectors, AC). Prevents venue deletion if upcoming events are booked.
+</p>
+<div class="code-box">
+  <div class="code-header">📁 server/src/controllers/venueController.js (Lines 130–145)</div>
+  <div class="code-content">const upcoming = await Event.countDocuments({ venue: id, startDate: { $gte: new Date() } });
+if (upcoming > 0) {
+  return res.status(400).json({ success: false, message: 'Cannot delete venue with upcoming event reservations.' });
+}
+await Venue.findByIdAndDelete(id);</div>
+  <div class="code-explanation">
+    <strong>Teacher Viva Question:</strong> <em>"How are venue amenities structured?"</em><br>
+    <strong>Answer:</strong> As an embedded array of atomic subdocuments within the Venue schema, satisfying First Normal Form (1NF).
+  </div>
+</div>
+
+<!-- Module 6 -->
+<h2>Module 6: Student Registrations & Gate Passes</h2>
+<p>
+  <strong>Purpose:</strong> Issues cryptographic random ticket numbers (e.g. <code>FF-B8491A</code>) and prevents duplicate registration through a compound unique index on <code>{ event: 1, user: 1 }</code>.
+</p>
+<div class="code-box">
+  <div class="code-header">📁 server/src/controllers/registrationController.js (Lines 40–60)</div>
+  <div class="code-content">const existing = await Registration.findOne({ event: eventId, user: req.user._id });
+if (existing && existing.registrationStatus !== 'cancelled') {
+  return res.status(400).json({ message: 'Already registered for this event.' });
+}
+// Generate unique ticket number
+const ticketNumber = 'FF-' + crypto.randomBytes(3).toString('hex').toUpperCase();</div>
+  <div class="code-explanation">
+    <strong>Teacher Viva Question:</strong> <em>"How do you stop race conditions when 100 students click register at the same second?"</em><br>
+    <strong>Answer:</strong> Through MongoDB's atomic document updates and compound unique indexing at the database level.
+  </div>
+</div>
+
+<!-- Module 7 -->
+<h2>Module 7: Payment Processing & Automated Accounting</h2>
+<p>
+  <strong>Purpose:</strong> Simulates payment gateway transactions. When a student pays an entry fee, the controller automatically triggers an internal transaction that credits the event revenue ledger.
+</p>
+<div class="code-box">
+  <div class="code-header">📁 server/src/controllers/paymentController.js (Lines 50–65)</div>
+  <div class="code-content">// Auto-record into Event Revenue for financial tracking (if fee > 0)
+if (registration.event.registrationFee > 0) {
+  await Revenue.create({
+    event: registration.event._id,
+    amount: registration.event.registrationFee,
+    revenueType: 'registration_fees',
+    description: `Registration fee paid by ${req.user.name}`
+  });
+}</div>
+  <div class="code-explanation">
+    <strong>Teacher Viva Question:</strong> <em>"How is financial accounting synchronized with ticket sales?"</em><br>
+    <strong>Answer:</strong> Via an automated cross-module controller write: payment confirmation directly writes a Revenue record linked to the event foreign key.
+  </div>
+</div>
+
+<!-- Module 8 -->
+<h2>Module 8: Event Treasury, Budgeting & 3NF Ledger</h2>
+<p>
+  <strong>Purpose:</strong> Tracks approved budgets, debit expenses, and credit revenues. Complies with 3NF by deriving totals dynamically without storing redundant calculated columns.
+</p>
+<div class="code-box">
+  <div class="code-header">📁 server/src/controllers/financeController.js (Lines 10–25)</div>
+  <div class="code-content">// 3NF Compliance: Derived on the fly without storing redundant totals in DB
+const totalExpenditure = expenses.reduce((sum, e) => sum + e.amount, 0);
+const totalRevenue = revenues.reduce((sum, r) => sum + r.amount, 0);
+const profit = totalRevenue - totalExpenditure;
+res.json({ success: true, totalExpenditure, totalRevenue, profit });</div>
+  <div class="code-explanation">
+    <strong>Teacher Viva Question:</strong> <em>"Why don't you store 'totalExpenditure' directly in the Event document?"</em><br>
+    <strong>Answer:</strong> Storing calculated totals violates Third Normal Form (3NF) because they are transitively dependent on individual expense records. Deriving them dynamically eliminates update anomalies.
+  </div>
+</div>
+
+<!-- Module 9 -->
+<h2>Module 9: Corporate Sponsorships & Grants</h2>
+<p>
+  <strong>Purpose:</strong> Manages partner companies (e.g. Google Cloud, Red Bull) and links them to events via tiered sponsorships (Title, Platinum, Gold). Confirmed grants automatically credit event revenue.
+</p>
+<div class="code-box">
+  <div class="code-header">📁 server/src/controllers/sponsorController.js (Lines 70–85)</div>
+  <div class="code-content">await EventSponsor.create({ event: eventId, sponsor: sponsorId, sponsorshipAmount, sponsorshipType });
+// Auto record into Event Revenue
+await Revenue.create({ event: eventId, amount: sponsorshipAmount, revenueType: 'sponsorship' });</div>
+  <div class="code-explanation">
+    <strong>Teacher Viva Question:</strong> <em>"What relational relationship exists between Sponsors and Events?"</em><br>
+    <strong>Answer:</strong> Many-to-Many (M:N), resolved through an associative entity (<code>EventSponsor</code>) containing foreign keys to both tables.
+  </div>
+</div>
+
+<!-- Module 10 -->
+<h2>Module 10: Hospitality, Catering & Virtual Costing</h2>
+<p>
+  <strong>Purpose:</strong> Manages catering food and beverage contracts with atomic line items (Item, Quantity, Unit Rate). Uses a Mongoose virtual getter to calculate totals dynamically.
+</p>
+<div class="code-box">
+  <div class="code-header">📁 server/src/models/Catering.js (Lines 35–45)</div>
+  <div class="code-content">CateringSchema.virtual('totalCost').get(function () {
+  if (!this.menu || this.menu.length === 0) return 0;
+  return this.menu.reduce((acc, item) => acc + (item.quantity * item.costPerUnit), 0);
+});</div>
+  <div class="code-explanation">
+    <strong>Teacher Viva Question:</strong> <em>"What is a Mongoose virtual?"</em><br>
+    <strong>Answer:</strong> A virtual is a calculated attribute that exists only in application logic and is not persisted to database disk, preserving 3NF compliance.
+  </div>
+</div>
+
+<!-- Module 11 -->
+<h2>Module 11: Competitions, Squads & Jury Scoring</h2>
+<p>
+  <strong>Purpose:</strong> Tournament arena supporting hackathons, debates, and robotics challenges. Enforces team capacity limits and manages rubric scoring points and prize winners.
+</p>
+<div class="code-box">
+  <div class="code-header">📁 server/src/controllers/competitionController.js (Lines 80–95)</div>
+  <div class="code-content">if (competition.teams.length >= competition.maximumTeams) {
+  return res.status(400).json({ message: 'Tournament team capacity reached.' });
+}</div>
+  <div class="code-explanation">
+    <strong>Teacher Viva Question:</strong> <em>"How are scores assigned by judges stored?"</em><br>
+    <strong>Answer:</strong> Each score record references the Competition, the Team, the Judge, and the specific Criteria ID.
+  </div>
+</div>
+
+<!-- Module 12 -->
+<h2>Module 12: Digital E-Certificates & Public Verification</h2>
+<p>
+  <strong>Purpose:</strong> Issues digital merit, participation, and volunteering certificates. Features a public verification endpoint accessible without login for third-party verification.
+</p>
+<div class="code-box">
+  <div class="code-header">📁 server/src/controllers/certificateController.js (Lines 85–100)</div>
+  <div class="code-content">// Public verification endpoint - no authentication required
+const cert = await Certificate.findOne({ verificationCode: req.params.code }).populate('user event');
+if (!cert) return res.status(404).json({ success: false, message: 'Certificate code invalid' });
+res.json({ success: true, isValid: true, certificate: cert });</div>
+  <div class="code-explanation">
+    <strong>Teacher Viva Question:</strong> <em>"How does an external employer verify a student's certificate?"</em><br>
+    <strong>Answer:</strong> By querying <code>/api/certificates/verify/:code</code> on the web portal. The server validates the cryptographic code and returns verified student and event details.
+  </div>
+</div>
+
+<!-- Module 13 -->
+<h2>Module 13: Student Volunteer Corps & Shifts</h2>
+<p>
+  <strong>Purpose:</strong> Coordinates student volunteer shifts for campus events (registration desk, stage management, crowd control), tracking service hours and completion status.
+</p>
+<div class="code-box">
+  <div class="code-header">📁 server/src/controllers/volunteerController.js (Lines 10–25)</div>
+  <div class="code-content">const volunteer = await Volunteer.create({
+  event: eventId, user: req.user._id, assignedTask, shiftStart, shiftEnd, volunteerStatus: 'applied'
+});</div>
+  <div class="code-explanation">
+    <strong>Teacher Viva Question:</strong> <em>"Why is volunteering separated from regular event registration?"</em><br>
+    <strong>Answer:</strong> Attendees are spectators with gate passes; volunteers are operational workers with assigned shifts and duties.
+  </div>
+</div>
+
+<!-- Module 14 -->
+<h2>Module 14: Attendee Feedback & Dynamic Star Ratings</h2>
+<p>
+  <strong>Purpose:</strong> Collects 1-to-5 star ratings and reviews from verified attendees, dynamically recalculating the festival's aggregate score shown on the masthead.
+</p>
+<div class="code-box">
+  <div class="code-header">📁 server/src/controllers/feedbackController.js (Lines 40–55)</div>
+  <div class="code-content">const reviews = await Feedback.find({ event: eventId });
+const avgRating = reviews.reduce((acc, r) => acc + r.rating, 0) / (reviews.length || 1);</div>
+  <div class="code-explanation">
+    <strong>Teacher Viva Question:</strong> <em>"Can a user spam reviews for an event?"</em><br>
+    <strong>Answer:</strong> No. A compound unique index on <code>{ event: 1, user: 1 }</code> restricts each attendee to a single review.
+  </div>
+</div>
+
+<!-- ========================================================================= -->
+<div class="page-break"></div>
+<h1>6. Database Architecture & 3NF Normalization Mapping</h1>
+<!-- ========================================================================= -->
+
+<p>
+  If your teacher asks: <em>"Why did you use MongoDB for a DBMS project, and how does your project satisfy 3NF normalization?"</em>, 
+  explain that FestFlow enforces <strong>Relational Normalization Discipline</strong> on top of MongoDB Atlas, accompanied by standard SQL files in <code>database/</code>:
+</p>
+
+<div class="table-container">
+<table>
+  <thead>
+    <tr>
+      <th style="width: 20%;">Normalization Level</th>
+      <th style="width: 45%;">How FestFlow Enforces This in Code & Schema</th>
+      <th style="width: 35%;">Relational Anomalies Avoided</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>First Normal Form (1NF)</strong></td>
+      <td>Every field contains atomic, indivisible values. Multi-item arrays (catering menu courses, venue amenities) are modeled with individual attributes (<code>menuItem</code>, <code>quantity</code>, <code>costPerUnit</code>).</td>
+      <td>Eliminates comma-separated strings or non-atomic data.</td>
+    </tr>
+    <tr>
+      <td><strong>Second Normal Form (2NF)</strong></td>
+      <td>All non-key attributes are fully functionally dependent on the primary key. In the <code>Registration</code> entity, the ticket number and status depend on the composite key (<code>event</code> + <code>user</code>).</td>
+      <td>Eliminates partial functional dependencies.</td>
+    </tr>
+    <tr>
+      <td><strong>Third Normal Form (3NF)</strong></td>
+      <td>No transitive dependencies exist. In the finance module, <code>totalExpenditure</code> and <code>profit</code> are derived dynamically via aggregation and are never stored as static columns.</td>
+      <td>Eliminates update and deletion anomalies in financial accounts.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<!-- ========================================================================= -->
+<h1>7. Quality Assurance & Automated Testing Evidence</h1>
+<!-- ========================================================================= -->
+
+<p>
+  FestFlow includes an automated integration test suite in <code>tests/run_all.js</code>. You can run this in front of the teacher with: <code>node tests/run_all.js</code>:
+</p>
+
+<div class="table-container">
+<table>
+  <thead>
+    <tr>
+      <th style="width: 30%;">Test Suite Name</th>
+      <th style="width: 25%;">Target Test File</th>
+      <th style="width: 15%;">Assertions</th>
+      <th style="width: 15%;">Result</th>
+      <th style="width: 15%;">Cluster</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Faculty & Club Hierarchy Suite</td>
+      <td><code>tests/faculty_and_clubs.test.js</code></td>
+      <td>22 Tests</td>
+      <td><strong>22 / 22 PASSED</strong></td>
+      <td>MongoDB Atlas</td>
+    </tr>
+    <tr>
+      <td>Multi-Club Scoped Permissions Suite</td>
+      <td><code>tests/permissions.test.js</code></td>
+      <td>17 Tests</td>
+      <td><strong>17 / 17 PASSED</strong></td>
+      <td>MongoDB Atlas</td>
+    </tr>
+    <tr>
+      <td>14-Module Comprehensive Suite</td>
+      <td><code>tests/runServerTest.js</code></td>
+      <td>14 Tests</td>
+      <td><strong>14 / 14 PASSED</strong></td>
+      <td>MongoDB Atlas</td>
+    </tr>
+    <tr style="background-color: #f0fdf4;">
+      <td><strong>TOTAL VERIFIED SUITE</strong></td>
+      <td><code>tests/run_all.js</code></td>
+      <td><strong>53 Tests</strong></td>
+      <td><strong style="color: #0d9488;">53 / 53 PASSED (100%)</strong></td>
+      <td>Live Atlas DB</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<!-- ========================================================================= -->
+<div class="page-break"></div>
+<h1>8. Faculty Viva Voce & Presentation Defense Master Cheat Sheet</h1>
+<!-- ========================================================================= -->
+
+<p>
+  Review these 10 anticipated teacher questions and verbatim answers before your project viva:
+</p>
+
+<div class="viva-card">
+  <div class="viva-question">Q1: What is the architectural difference between your frontend and backend?</div>
+  <p class="viva-answer"><strong>Defense Answer:</strong> FestFlow uses a decoupled Client-Server architecture. The frontend is a Single Page Application (SPA) built with React 18 and Vite, running entirely inside the student's browser. The backend is an asynchronous REST API built with Node.js and Express running on port 5000. All communication occurs over JSON payloads via HTTP requests, authenticated by stateless Bearer JWT tokens in the request header.</p>
+</div>
+
+<div class="viva-card">
+  <div class="viva-question">Q2: How do you prevent an organizer of the Coding Club from editing or deleting an event belonging to the Dance Club?</div>
+  <p class="viva-answer"><strong>Defense Answer:</strong> In <code>server/src/utils/clubAuthorization.js</code>, our middleware executes <code>authorizeClubAdminOrFaculty</code>. It inspects the target event's parent club ID and checks if that club exists in <code>req.user.authorizedClubs</code>. If the organizer does not have authority for that club and is not an administrator, the server halts execution and returns HTTP 403 Forbidden before reaching the controller.</p>
+</div>
+
+<div class="viva-card">
+  <div class="viva-question">Q3: Why use MongoDB Atlas instead of MySQL or PostgreSQL?</div>
+  <p class="viva-answer"><strong>Defense Answer:</strong> MongoDB Atlas provides native JSON document serialization matching React's state tree, automated cloud provisioning, and horizontal scaling. We enforce relational discipline using Mongoose schemas (foreign key references with <code>ObjectId</code>, unique compound indexes, and pre-delete hooks). Additionally, <code>database/schema.sql</code> provides the exact 3NF relational equivalent.</p>
+</div>
+
+<div class="viva-card">
+  <div class="viva-question">Q4: How do you store passwords securely in the database?</div>
+  <p class="viva-answer"><strong>Defense Answer:</strong> Passwords are never stored in plaintext. In <code>server/src/models/User.js</code>, we use a Mongoose pre-save middleware hook with <code>bcryptjs.genSalt(10)</code> and <code>bcryptjs.hash()</code>. When a user logs in, <code>bcryptjs.compare()</code> verifies the incoming plaintext password against the hashed string.</p>
+</div>
+
+<div class="viva-card">
+  <div class="viva-question">Q5: How does your event treasury satisfy Third Normal Form (3NF)?</div>
+  <p class="viva-answer"><strong>Defense Answer:</strong> In <code>server/src/controllers/financeController.js</code>, we do not store static <code>totalExpenditure</code>, <code>totalRevenue</code>, or <code>netProfit</code> columns in the database. Storing calculated values introduces transitive dependency anomalies. Instead, totals are derived dynamically on the fly using array reductions and aggregation pipelines.</p>
+</div>
+
+<div class="viva-card">
+  <div class="viva-question">Q6: Why did you choose React Context instead of Redux for state management?</div>
+  <p class="viva-answer"><strong>Defense Answer:</strong> React's native Context API (<code>client/src/context/AuthContext.jsx</code>) provides clean, centralized state management for user sessions, authentication status, and role tokens without adding hundreds of lines of Redux boilerplate, actions, or dispatch reducers.</p>
+</div>
+
+<div class="viva-card">
+  <div class="viva-question">Q7: How do you prevent event overbooking beyond venue capacity?</div>
+  <p class="viva-answer"><strong>Defense Answer:</strong> In <code>client/src/pages/CreateEvent.jsx</code> and <code>server/src/controllers/eventController.js</code>, <code>maxParticipants</code> is validated against the selected venue's physical seating capacity (<code>venue.capacity</code>). Furthermore, when students register, <code>registrationController.js</code> checks if <code>event.registeredCount</code> has reached <code>event.maxParticipants</code>.</p>
+</div>
+
+<div class="viva-card">
+  <div class="viva-question">Q8: What happens if a student cancels their registration and later registers again?</div>
+  <p class="viva-answer"><strong>Defense Answer:</strong> In <code>server/src/controllers/registrationController.js</code>, the system checks for an existing record. If found with status 'cancelled', it reactivates the record to 'registered', decrements available seats, and returns their existing ticket number, preventing duplicate ticket inflation.</p>
+</div>
+
+<div class="viva-card">
+  <div class="viva-question">Q9: How do external parties verify digital certificates?</div>
+  <p class="viva-answer"><strong>Defense Answer:</strong> Certificates are issued with a unique cryptographic code (e.g. <code>V-FEST26-8812</code>). Anyone can access the public verification route <code>/certificates/verify/:code</code> on the web portal without needing an account. The server validates the code and returns the verified student name, festival title, and issue date.</p>
+</div>
+
+<div class="viva-card">
+  <div class="viva-question">Q10: What single command demonstrates that your entire application is working?</div>
+  <p class="viva-answer"><strong>Defense Answer:</strong> In the terminal, run <code>node tests/run_all.js</code>. This command executes our master integration test harness, running 53 automated tests across all 14 modules, verifying live database reads, writes, transactions, and security checks on MongoDB Atlas with 100% pass rate.</p>
+</div>
+
+</body>
+</html>

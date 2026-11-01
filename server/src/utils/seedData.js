@@ -8,22 +8,23 @@ const Registration = require('../models/Registration');
 
 const seedData = async () => {
   try {
-    const mongoUri = process.env.MONGODB_URI;
-    if (!mongoUri) {
-      console.error('❌ MONGODB_URI not found in environment');
+    const mongoUri = process.env.LOCAL_MONGODB_URI || 'mongodb://127.0.0.1:27017/festflow';
+    if (mongoUri.includes('mongodb.net') || mongoUri.includes('mongodb+srv://')) {
+      console.error('⛔ SAFETY ABORT: Refusing to run seed script against MongoDB Atlas!');
       process.exit(1);
     }
 
     await mongoose.connect(mongoUri);
-    console.log('🌱 Connected to MongoDB for seeding...');
+    console.log('🌱 Connected to Local MongoDB for seeding...');
 
-    // Clear existing collections
-    await Registration.deleteMany();
-    await Event.deleteMany();
-    await Club.deleteMany();
-    await Venue.deleteMany();
-    await User.deleteMany();
-    console.log('🧹 Cleared existing database records.');
+    // Clear existing local collections
+    const collections = await mongoose.connection.db.listCollections().toArray();
+    for (const c of collections) {
+      if (!c.name.startsWith('system.')) {
+        await mongoose.connection.db.collection(c.name).deleteMany({});
+      }
+    }
+    console.log('🧹 Cleared existing local database records.');
 
     // 1. Create Users
     console.log('👤 Seeding users...');
@@ -62,6 +63,16 @@ const seedData = async () => {
       programme: 'B.Tech',
       yearOfStudy: 2,
       section: 'B'
+    });
+
+    const faculty = await User.create({
+      name: 'Dr. Meenakshi Sundaram',
+      email: 'faculty@festflow.edu',
+      password: 'FacultyPassword123!',
+      role: 'faculty',
+      phone: '+91 98765 43213',
+      department: 'Computer Science and Engineering',
+      designation: 'Associate Professor & Club Mentor'
     });
 
     // 2. Create Venues
