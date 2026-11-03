@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { LogOut, Menu, Sparkles } from 'lucide-react';
 import Badge from './Badge';
-import SyncStatusBadge from './SyncStatusBadge';
+import DatabaseStatusBadge from './DatabaseStatusBadge';
 
 export default function Navbar({ onToggleSidebar }) {
   const { user, logout, isAuthenticated } = useAuth();
@@ -35,7 +35,7 @@ export default function Navbar({ onToggleSidebar }) {
         </div>
 
         <div className="flex items-center gap-3 sm:gap-4">
-          <SyncStatusBadge />
+          <DatabaseStatusBadge />
           {isAuthenticated ? (
             <>
               <div className="flex items-center gap-3 pl-2 sm:border-l sm:border-edge">

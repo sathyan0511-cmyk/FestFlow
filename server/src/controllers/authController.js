@@ -4,7 +4,7 @@ const { getAuthorizedClubIds, getSupervisedClubIds } = require('../utils/clubAut
 
 // Helper to sign JWT
 const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
+  return jwt.sign({ id }, process.env.JWT_SECRET || 'festflow_dev_secret_jwt_key_2026', {
     expiresIn: process.env.JWT_EXPIRES_IN || '7d'
   });
 };

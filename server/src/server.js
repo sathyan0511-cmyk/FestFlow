@@ -50,78 +50,25 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
 
-app.get('/api/health', async (req, res) => {
+app.get('/api/health', (req, res) => {
   const dbStatus = typeof connectDB.getDbStatus === 'function' ? connectDB.getDbStatus() : null;
-  let syncQueueStats = null;
-  let syncWorkerStats = null;
-  try {
-    const syncQueueService = require('./services/syncQueueService');
-    syncQueueStats = await syncQueueService.getQueueStats();
-  } catch (_) {}
-
-  try {
-    const syncWorker = require('./services/syncWorkerService');
-    syncWorkerStats = await syncWorker.getWorkerStatus();
-  } catch (_) {}
-
   res.status(200).json({
     status: 'online',
     appName: 'FestFlow API',
     version: '1.0.0',
-    mode: dbStatus?.cloud?.connected ? 'cloud-synced' : 'offline-local',
+    mode: 'local-only',
     database: dbStatus,
-    syncQueue: syncQueueStats,
-    syncWorker: syncWorkerStats,
     timestamp: new Date().toISOString()
   });
 });
 
-app.get('/api/sync/status', async (req, res) => {
-  try {
-    const dbStatus = typeof connectDB.getDbStatus === 'function' ? connectDB.getDbStatus() : null;
-    const syncQueueService = require('./services/syncQueueService');
-    const syncWorker = require('./services/syncWorkerService');
-
-    const [queueStats, workerStatus] = await Promise.all([
-      syncQueueService.getQueueStats().catch(() => ({ pending: 0, processing: 0, synced: 0, failed: 0, conflict: 0, unresolvedConflicts: 0 })),
-      syncWorker.getWorkerStatus().catch(() => ({ running: false, atlasConnected: false }))
-    ]);
-
-    const localDbReady = dbStatus?.local?.connected || false;
-    const cloudAtlasReady = dbStatus?.cloud?.connected || workerStatus?.atlasConnected || false;
-
-    let overallStatus = 'OFFLINE';
-    if (!localDbReady) {
-      overallStatus = 'SERVER_ERROR';
-    } else if (queueStats.unresolvedConflicts > 0 || queueStats.conflict > 0) {
-      overallStatus = 'CONFLICT';
-    } else if (queueStats.failed > 0) {
-      overallStatus = 'SYNC ERROR';
-    } else if (queueStats.processing > 0) {
-      overallStatus = 'SYNCING';
-    } else if (cloudAtlasReady && queueStats.pending > 0) {
-      overallStatus = 'SYNCING';
-    } else if (!cloudAtlasReady && queueStats.pending > 0) {
-      overallStatus = 'PENDING CHANGES';
-    } else if (cloudAtlasReady && queueStats.pending === 0) {
-      overallStatus = 'SYNCED';
-    } else if (!cloudAtlasReady && queueStats.pending === 0) {
-      overallStatus = 'OFFLINE';
-    }
-
-    res.status(200).json({
-      success: true,
-      overallStatus,
-      localDbReady,
-      cloudAtlasReady,
-      syncWorkerRunning: workerStatus?.running || false,
-      queueStats,
-      workerStatus,
-      timestamp: new Date().toISOString()
-    });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
+app.get('/api/sync/status', (req, res) => {
+  res.status(200).json({
+    success: true,
+    mode: 'local-only',
+    message: 'FestFlow operates in standalone local MongoDB mode.',
+    timestamp: new Date().toISOString()
+  });
 });
 
 app.use('/api/auth', authRoutes);
@@ -155,23 +102,13 @@ const PORT = process.env.PORT || 5000;
 let server;
 if (require.main === module) {
   connectDB().then(() => {
-    // Start background sync worker (runs only in offline-first mode when enabled)
-    const syncWorker = require('./services/syncWorkerService');
-    syncWorker.start().catch((err) => {
-      console.warn('⚠️ SyncWorker startup warning:', err.message);
-    });
-
     server = app.listen(PORT, () => {
-      console.log(`🚀 FestFlow Server running on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
+      console.log(`🚀 FestFlow Server running on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode (Local-Only)`);
     });
   });
 
   const handleShutdown = async (signal) => {
     console.log(`\n🛑 Received ${signal}. Starting graceful shutdown...`);
-    try {
-      const syncWorker = require('./services/syncWorkerService');
-      await syncWorker.stop();
-    } catch (_) {}
 
     if (server) {
       server.close(async () => {
