@@ -21,7 +21,7 @@ FestFlow addresses these challenges through a centralized, cloud-backed architec
 
 FestFlow is a full-stack college event management platform built to streamline event coordination, club administration, attendee ticketing, and financial ledger tracking across university departments. Traditional collegiate event workflows face challenges with multi-club permission overlap, venue scheduling conflicts, double registrations, and unverified credentials. FestFlow solves this by implementing a structured four-tier role hierarchy (Admin, Faculty, Organizer, and Student) with strict server-side boundary enforcement. Students can discover fests, register for events with unique digital passes, and verify certificates. Faculty coordinators supervise clubs and appoint student organizers, while organizers manage club-scoped events and finances without cross-club data leakage. Built on React 18, Vite, Tailwind CSS, Node.js, and Express, FestFlow connects to a cloud-hosted MongoDB Atlas database modeled with Mongoose ODM under strict third normal form principles, deriving profits, seat availability, and catering costs dynamically without data redundancy.
 
-*(Word count: 134 words)*
+
 
 ---
 
@@ -29,10 +29,10 @@ FestFlow is a full-stack college event management platform built to streamline e
 
 | S. No. | Team Member Name | Register Number | Role or Contribution |
 | :---: | :--- | :--- | :--- |
-| 1 | Sathyan | `[Enter register number]` | Full-Stack Development, System Architecture & Database Design |
-| 2 | `[Enter team member name]` | `[Enter register number]` | Frontend UI/UX, Component Styling & Documentation |
-| 3 | `[Enter team member name]` | `[Enter register number]` | Backend API Development & Automated Test Suites |
-| 4 | `[Enter team member name]` | `[Enter register number]` | Database Normalization, Schema Modeling & Quality Assurance |
+| 1 | S.Sathyan | 25BCE1683 | Backend & API Development |
+| 2 | S.Sarvesh | 25BCE1702 | Frontend And UI |
+| 3 | N.Sriram | 25BCE1619 | Database Design, Security & Testing |
+
 
 ---
 
@@ -187,35 +187,6 @@ The database includes pre-configured demo accounts for academic evaluation:
 
 ## 10. Description of Database Tables/Collections, Relationships, and Sample Data
 
-FestFlow manages **18 MongoDB collections** structured according to database normalization rules:
-
-### Entity Relationship Diagram (Mermaid ER)
-
-```mermaid
-erDiagram
-    USER ||--o{ REGISTRATION : places
-    USER ||--o{ CLUB_MEMBERSHIP : holds
-    USER ||--o{ EVENT : creates
-    USER ||--o{ FEEDBACK : submits
-    USER ||--o{ CERTIFICATE : receives
-    CLUB ||--o{ EVENT : organizes
-    CLUB ||--o{ CLUB_MEMBERSHIP : has
-    CLUB }o--|| USER : "supervised by faculty"
-    VENUE ||--o{ EVENT : hosts
-    EVENT ||--o{ REGISTRATION : receives
-    EVENT ||--o{ EXPENSE : incurs
-    EVENT ||--o{ REVENUE : generates
-    EVENT ||--o{ BUDGET : has
-    EVENT ||--o{ CATERING : books
-    EVENT ||--o{ COMPETITION : conducts
-    EVENT ||--o{ EVENT_SPONSOR : receives
-    REGISTRATION ||--o| PAYMENT : pays
-    COMPETITION ||--o{ TEAM : registers
-    COMPETITION ||--o{ JUDGE_SCORE : evaluates
-    COMPETITION ||--o{ RESULT : announces
-    SPONSOR ||--o{ EVENT_SPONSOR : funds
-```
-
 ### Detailed Collection Specifications
 Detailed schema definitions, constraints, and aggregation queries are documented in the [`database/`](./database/) directory:
 - [`database/README.md`](./database/README.md) — Architecture & Mongoose conventions.
@@ -226,42 +197,7 @@ Detailed schema definitions, constraints, and aggregation queries are documented
 
 ---
 
-## 11. Screenshots and Summary of Implemented Features
-
-Visual proof of the running application is organized in the [`screenshots/`](./screenshots/) directory.
-
-### Visual Documentation Checklist & TODO
-
-Since image binaries are pending capture, refer to the following capture checklist:
-
-- [ ] `screenshots/application/login_role_selection.png`: Login portal showing 4-role 1-click quick-fill buttons.
-- [ ] `screenshots/application/student_event_discovery.png`: Student event catalog with category filtering and search.
-- [ ] `screenshots/application/student_event_details.png`: Event detail profile with seat availability, schedule, and venue details.
-- [ ] `screenshots/application/student_digital_passes.png`: Student e-ticket pass wallet with QR tokens.
-- [ ] `screenshots/application/organizer_my_clubs.png`: Organizer "My Clubs" section and campus clubs directory.
-- [ ] `screenshots/application/organizer_event_management.png`: Organizer dashboard with club-scoped event scheduling.
-- [ ] `screenshots/application/organizer_event_finances.png`: Financial ledger with dynamic net profit calculation.
-- [ ] `screenshots/application/faculty_dashboard.png`: Faculty coordinator dashboard with supervised clubs.
-- [ ] `screenshots/application/faculty_club_management.png`: Dedicated club console (`/manage/club/:id`).
-- [ ] `screenshots/application/faculty_assign_organizer.png`: Faculty modal for appointing student organizers.
-- [ ] `screenshots/application/admin_faculty_management.png`: Admin faculty account provisioning console.
-- [ ] `screenshots/application/competitions_leaderboard.png`: Hackathon contest page with live judge scores and leaderboard.
-- [ ] `screenshots/application/certificate_verification.png`: Tamper-proof certificate verification portal.
-- [ ] `screenshots/database/atlas_cluster_overview.png`: MongoDB Atlas cloud deployment overview (credentials masked).
-- [ ] `screenshots/database/atlas_collections_roster.png`: 18 collections visible in MongoDB Atlas / Compass.
-- [ ] `screenshots/database/atlas_document_inspector.png`: Normalized document inspection.
-- [ ] `screenshots/database/atlas_compound_indexes.png`: Index explorer showing unique compound index `{ user: 1, event: 1 }`.
-- [ ] `screenshots/testing/backend_test_results.png`: Terminal output of `tests/runServerTest.js` (14/14 Modules PASSED).
-- [ ] `screenshots/testing/faculty_hierarchy_test_results.png`: Terminal output of `tests/faculty_and_clubs.test.js` (22/22 PASSED).
-- [ ] `screenshots/testing/permissions_test_results.png`: Terminal output of `tests/permissions.test.js` (17/17 PASSED).
-- [ ] `screenshots/testing/master_test_runner_results.png`: Terminal output of `tests/run_all.js` (53/53 PASSED).
-- [ ] `screenshots/testing/frontend_build_results.png`: Terminal output of `npm run build --prefix client` (0 errors).
-
-*Detailed screenshot capturing instructions are available in [`screenshots/README.md`](./screenshots/README.md).*
-
----
-
-## 12. Test Instructions and Known Limitations
+## 11. Test Instructions and Known Limitations
 
 FestFlow includes automated end-to-end integration and permission test suites that execute directly against the live MongoDB Atlas cluster.
 
@@ -297,8 +233,6 @@ MASTER TEST SUMMARY: 53 / 53 TESTS PASSED (100% SUCCESS)
 ========================================================================================
 ```
 
-*Full testing specifications and runner guides are documented in [`tests/README.md`](./tests/README.md).*
-
 ---
 
 ### Known Limitations
@@ -310,16 +244,11 @@ In the spirit of academic transparency, the following items represent planned en
 
 ---
 
-## 13. YouTube Demonstration Video Link
-
-A complete screen recording and feature walkthrough demonstrating student event registration, faculty organizer assignment, organizer event scheduling, and public certificate verification is available below:
-
-> **Demonstration Video Link**:
-> `[Add YouTube demonstration link after uploading the video]`
+## 12. YouTube Demonstration Video Link
 
 ---
 
-## 14. Repository Documentation Index
+## 13. Repository Documentation Index
 
 - [`environment_instructions.md`](./environment_instructions.md) — Comprehensive execution and environment setup guide.
 - [`database/`](./database/) — Schema specifications, collection directory, sample data, and aggregation queries.
